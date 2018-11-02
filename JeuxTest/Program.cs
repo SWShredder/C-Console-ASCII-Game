@@ -37,7 +37,7 @@ namespace Game
             { Gray, Gray, Blue, Blue, DarkRed, Gray, Gray }
         };
         // Generates temp files.
-        public static int RenderMode = 2;
+        public static int RenderMode = 1;
         public static Physics.Space Map = new Physics.Space(new Vector2(400, 400));
         public static Systems.Camera Camera = new Systems.Camera();
         public static Program Game = new Program();
@@ -46,7 +46,7 @@ namespace Game
         public Player player = new Player(PlayerGraphic, PlayerGraphicColorMatrix);
         void GameInit()
         {
-            Systems.Update.Register(Display);
+
             PopulateAsteroid(new Vector2(20, 20));
             PopulateAsteroid(new Vector2(150, 30));
             PopulateAsteroid(new Vector2(35, 50));

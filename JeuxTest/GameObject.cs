@@ -57,14 +57,8 @@ namespace Game
 
         }
 
-        public void Update()
+        public virtual void Update()
         {
-            if(Program.RenderMode == 2)
-            {
-                Program.Display.Erase(this);
-                Program.Map.OnPositionUpdate(this, this.Position);
-                Program.Display.Draw(this);
-            }
 
         }
         // Class constructor adds GameObject to the static list.
@@ -174,6 +168,7 @@ namespace Game
         // Update method is used to update ticks for the Player.
         public new void Update()
         {
+
             // The amount of ticks between update cycles.
             deltaTime = Systems.Update.DeltaTime;
             // amount of ticks since last movement.
@@ -223,12 +218,8 @@ namespace Game
             if ((Position + coords).X < 0 || (Position + coords).Y < 0)
                 return;
             // Amount of ticks is reset after movement until next move.
-            if(Program.RenderMode != 1)
-                Program.Display.Erase(this);
             localTicks = 0;
             this.Position += coords;
-            if (Program.RenderMode != 1)
-                Program.Display.Draw(this);
         }
     }
 }

@@ -18,10 +18,7 @@ namespace Game
         {
             return new Vector2(x, y);
         }
-        public static Color RGB(byte red, byte green, byte blue)
-        {
-            return new Color(red, green, blue);
-        }
+
     }
     public class Vector2
     {

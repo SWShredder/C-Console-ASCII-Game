@@ -15,32 +15,58 @@ namespace Game
 
 
 
-
-
-
         public class Display : IUpdate
         {
             // Initialization
             public Display()
             {
-
+                Systems.Update.Register(this);
             }
 
             // Update method from IUpdate interface
             public void Update()
             {
                 // No color but the fastest render.
-                if (Program.RenderMode == 1)
-                {
-                    Program.Camera.ScreenRender.Draw();
-                }
-                // Color Mode with render from layer and backbuffer.
                 if (Program.RenderMode == 0)
                 {
-                    Program.Camera.ScreenRender.Draw();
+                    DrawNoColor(Program.Camera.ScreenRender);
+                }
+                // Color Mode with render from layer and backbuffer.
+                if (Program.RenderMode == 1)
+                {
+                    DrawNoColor(Program.Camera.ScreenRender, true);
                     DrawColorLayer(Program.Camera.ScreenRender);
                 }
 
+            }
+
+
+
+            public void DrawNoColor(object frame, bool isLayer = false)
+            {
+                Vector2 framePosition = (frame as IPosition) != null ? (frame as IPosition).Position : Vec2(0, 0);
+                Vector2 frameSize = (frame as ISize) != null ? (frame as ISize).Size : Vec2(0, 0);
+                Sprite frameSprite = (frame as IGraphics) != null ? (frame as IGraphics).Graphics : (Sprite)frame;
+
+                string[] screenBuffer = new string[frameSize.Y];
+
+                for (int y = 0; y < frameSize.Y; y++)
+                {
+                    string bufferLine = "";
+                    for (int x = 0; x < frameSize.X; x++)
+                    {
+                        if (frameSprite[x, y].Color == ConsoleColor.Gray || isLayer == false)
+                            bufferLine += frameSprite[x, y].Char;
+                        else
+                            bufferLine += " ";
+                    }
+                    screenBuffer[y] = bufferLine;
+                }
+                Console.SetCursorPosition(0, 0);
+                foreach (string line in screenBuffer)
+                {
+                    Console.WriteLine(line);
+                }
             }
 
 
