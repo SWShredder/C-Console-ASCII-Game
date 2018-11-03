@@ -7,6 +7,18 @@ using System.Threading.Tasks;
 
 namespace Game
 {
+    public class CameraPositionEventArgs : EventArgs
+    {
+        public Vector2 Position { set; get; }
+        public Vector2 Size { set; get; }
+    }
+
+    public class DrawRequestEventArgs : EventArgs
+    {
+        public Vector2 OldScreenPosition { set; get; }
+        public Vector2 ScreenPosition { set; get; }
+        public Sprite Sprite { set; get; }
+    }
 
     static public class Utility
     {

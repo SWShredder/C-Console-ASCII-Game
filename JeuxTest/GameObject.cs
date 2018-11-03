@@ -11,9 +11,9 @@ namespace Game
     public class GameObject : IPosition, IEnumerable<GameObject>, IMove, ISize, IPositionMatrix, IGraphics, IUpdate
     {
         // Static list of GameObjects
-        static private int GameObjectIndex = 0;
         static public List<GameObject> GameObjectList = new List<GameObject>();
 
+        private Graphics GraphicSet;
         private Sprite graphics;
         public PositionMatrix PositionMatrix => new PositionMatrix(this.Size, this.Position);
         public Sprite Graphics
@@ -61,25 +61,33 @@ namespace Game
         {
 
         }
+
+
+
+
         // Class constructor adds GameObject to the static list.
-        public GameObject(string[] graphics)
+        private void Initialize()
         {
             GameObjectList.Add(this);
-            GameObjectIndex++;
-            //this.Position = new Vector2(10, 10);
+            GraphicSet = new Graphics(this);
+            Systems.Update.Register(this);
+        }
+
+        public GameObject(string[] graphics)
+        {
+            Initialize();
             Graphics = new Sprite(graphics);
             PhysicsBody2 = new PhysicsBody2(Graphics);
-            Systems.Update.Register(this);
         }
         public GameObject(string[] graphics, ConsoleColor[,] colorMatrix)
         {
-            GameObjectList.Add(this);
-            GameObjectIndex++;
-            //this.Position = new Vector2(10, 10);
             Graphics = new Sprite(graphics, colorMatrix);
             PhysicsBody2 = new PhysicsBody2(Graphics);
-            Systems.Update.Register(this);
         }
+
+
+
+
         // The code to make GameObject Enumeratable.
         public IEnumerator<GameObject> GetEnumerator()
         {
@@ -94,6 +102,10 @@ namespace Game
             return GetEnumerator();
         }
         // Methods
+
+
+
+
 
     }
     public class Entity : GameObject

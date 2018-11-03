@@ -10,9 +10,6 @@ namespace Game
 
     public class Sprite : ISize, IPosition
     {
-
-
-
         static public List<Sprite> List = new List<Sprite>();
 
 
@@ -49,7 +46,7 @@ namespace Game
             get => TileTable[x, y];
             set => TileTable[x, y] = value;
         }
-
+        
 
 
         // INITIALIZATION
@@ -174,6 +171,19 @@ namespace Game
                     return sprite.Size;
             }
         }
+        public Sprite Sprite
+        {
+            set
+            {
+                sprite = value;
+            }
+            get
+            {
+                return sprite;
+            }
+        }
+
+
 
         public Frame(Sprite sprite)
         {
@@ -186,6 +196,9 @@ namespace Game
 
         }
 
+
+
+        // Allows the class to generate an empty frame of any size.
         private Sprite EmptyFrame(Vector2 size)
         {
             string[] emptyFrame = new string[size.Y];
@@ -202,4 +215,91 @@ namespace Game
         }
     }
 
+
+
+    public class Animation
+    {
+        public string Name;
+        public Frame[] Frames;
+        public int Length;
+        public int FrameIndex;
+        public bool IsPlaying;
+        public int Speed;
+
+    }
+
+
+
+
+    public class Graphics
+    {
+        public delegate void DrawEventHandler(object source, DrawRequestEventArgs args);
+        public event DrawEventHandler DrawRequest;
+
+        public Dictionary<string, Animation> Animations = new Dictionary<string, Animation>();
+        private object parent;
+        public object Parent => parent;
+        public Animation CurrentAnimation;
+        private Frame currentFrame;
+        public Frame CurrentFrame
+        {
+            get
+            {
+                if(currentFrame == null)
+                {
+                    currentFrame = new Frame((parent as GameObject).Graphics);
+                }
+                return currentFrame;
+            }
+            set
+            {
+                currentFrame = value;
+            }
+        }
+
+        private Vector2 screenPosition;
+        public Vector2 ScreenPosition
+        {
+            get
+            {
+                return screenPosition;
+            }
+            set
+            {
+                screenPosition = value;
+            }
+        }
+
+        public Graphics(object _parent)
+        {
+            parent = _parent;
+            // Signal registry for Camera
+            Systems.Camera.ActiveCamera.CameraPositionChanged += OnCameraPositionChanged;
+            // Signal registry for ScreenRenderer
+            DrawRequest += Program.ScreenRenderer.OnDrawRequest;
+        }
+
+        protected virtual void OnDrawRequest(Vector2 oldScreenPosition, Vector2 newScreenPosition)
+        {
+            DrawRequest?.Invoke(this, new DrawRequestEventArgs()
+            {
+                OldScreenPosition = oldScreenPosition,
+                ScreenPosition = newScreenPosition,
+                Sprite = CurrentFrame.Sprite,
+            });
+        }
+
+        public void OnCameraPositionChanged(object source, CameraPositionEventArgs args)
+        {
+            Vector2 parentPosition = (Parent as IPosition) != null ? (Parent as IPosition).Position : new Vector2(0, 0);
+            Vector2 cameraPosition = args.Position;
+            Vector2 cameraSize = args.Size;
+            if(ScreenPosition != parentPosition - cameraPosition)
+            {
+                Vector2 oldScreenPosition = ScreenPosition;
+                ScreenPosition = parentPosition - cameraPosition;
+                OnDrawRequest(oldScreenPosition, ScreenPosition);
+            }
+        }
+    }
 }

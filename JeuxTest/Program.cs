@@ -10,6 +10,11 @@ namespace Game
 {
     public class Program
     {
+
+
+
+
+
         public static string[] DefaultGraphics =
         {
             " ",
@@ -29,6 +34,11 @@ namespace Game
             "AAAAAAAAA ",
             "  AAAAAAAA"
         };
+
+
+
+
+
         public static ConsoleColor[,] PlayerGraphicColorMatrix = {
             { Gray, Blue, DarkRed , DarkRed, DarkRed, Blue, Gray },
             { Gray, Blue, Blue, Blue, Blue, Blue, Gray },
@@ -36,14 +46,25 @@ namespace Game
             { Gray, Gray, DarkRed, DarkRed, Gray, Gray, Gray },
             { Gray, Gray, Blue, Blue, DarkRed, Gray, Gray }
         };
+
+
+
+
+
+
         // Generates temp files.
         public static int RenderMode = 1;
         public static Physics.Space Map = new Physics.Space(new Vector2(400, 400));
         public static Systems.Camera Camera = new Systems.Camera();
         public static Program Game = new Program();
         public static Systems.Display Display = new Systems.Display();
+        public static Systems.ScreenRenderer ScreenRenderer = new Systems.ScreenRenderer();
         public static bool GameExit = false;
         public Player player = new Player(PlayerGraphic, PlayerGraphicColorMatrix);
+
+
+
+
         void GameInit()
         {
 
@@ -58,12 +79,19 @@ namespace Game
             Camera.FitScreenSize();
 
         }
+
+
+
         // STAThread is only there to make the old System.Windows.Input work.
         [STAThread]
         static void Main(string[] args)
         {
             Game.GameProcesses();
         }
+
+
+
+
         public void GameProcesses()
         {
             GameInit();
@@ -72,9 +100,12 @@ namespace Game
                 DateTime time = DateTime.Now;
                 Console.CursorVisible = false;
                 Systems.Update.Process(time);
-                //ProcessInput();
             }
         }
+
+
+
+
         void PopulateAsteroid(Vector2 position)
         {
             GameObject newAsteroid = new GameObject(AsteroidGraphic)
@@ -83,11 +114,6 @@ namespace Game
             };
         }
 
-        void TestSpaceObject(Vector2 pos)
-        {
-            if (null == Map.SpaceArray[pos.X, pos.Y])
-                Console.WriteLine("Object is null");
-            Console.WriteLine(Map.SpaceArray[pos.X, pos.Y]);
-        }
+
     }
 }

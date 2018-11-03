@@ -7,14 +7,7 @@ namespace Game
 {
     public class Physics
     {
-        public class CollisionEvent
-        {
-            public GameObject Sender;
-            public GameObject Receiver;
-            public Vector2 Position;
 
-
-        }
         public class Space
         {
             public GameObject[,] SpaceArray;
