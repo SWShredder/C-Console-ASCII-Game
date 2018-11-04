@@ -13,8 +13,6 @@ namespace Game
 
 
 
-
-
         public static string[] DefaultGraphics =
         {
             " ",
@@ -28,11 +26,11 @@ namespace Game
             " xXXXx ",
         };
         public static string[] AsteroidGraphic = {
-            "  AAAAAA  ",
-            " AAAAAAAAA",
-            " AAAAAAAAA",
-            "AAAAAAAAA ",
-            "  AAAAAAAA"
+            "  1AAAAA  ",
+            " 2AAAAAAAA",
+            " 3AAAAAAAA",
+            "4AAAAAAAA ",
+            "  5AAAAAAA"
         };
 
 
@@ -60,18 +58,18 @@ namespace Game
         public static Systems.Display Display = new Systems.Display();
         public static Systems.ScreenRenderer ScreenRenderer = new Systems.ScreenRenderer();
         public static bool GameExit = false;
-        public Player player = new Player(PlayerGraphic, PlayerGraphicColorMatrix);
+        public Player player;
 
 
 
 
         void GameInit()
         {
-
+            player = new Player(PlayerGraphic, PlayerGraphicColorMatrix);
             PopulateAsteroid(new Vector2(20, 20));
             PopulateAsteroid(new Vector2(150, 30));
             PopulateAsteroid(new Vector2(35, 50));
-            Console.SetBufferSize((int)Console.LargestWindowWidth, (int)Console.LargestWindowHeight);
+            Console.SetBufferSize((int)(Console.LargestWindowWidth), (int)(Console.LargestWindowHeight));
             Console.SetWindowSize((int)(Console.LargestWindowWidth / 1.5), (int)(Console.LargestWindowHeight / 1.5));
             Console.CursorVisible = false;
             player.Position = new Vector2(10, 10);

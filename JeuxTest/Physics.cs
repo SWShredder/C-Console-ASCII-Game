@@ -7,7 +7,7 @@ namespace Game
 {
     public class Physics
     {
-
+        
         public class Space
         {
             public GameObject[,] SpaceArray;
@@ -165,131 +165,6 @@ namespace Game
         public bool this[int x, int y] => CollisionPoints[x, y];
     }
 
-
-    public class PhysicsBody : IEnumerable
-    {
-        private List<Vector2> body = new List<Vector2>();
-        private List<Vector2> Pos = new List<Vector2>();
-
-        // Setters and Getters.
-        public List<Vector2> Body => body;
-        // Constructors
-        public PhysicsBody()
-        {
-            Body.Add(new Vector2(0, 0));
-        }
-        public PhysicsBody(Vector2[] vec2Array)
-        {
-            foreach (Vector2 vec2 in vec2Array)
-            {
-                Body.Add(vec2);
-            }
-        }
-        public PhysicsBody(string[] graphic)
-        {
-            this.body = GenerateBody(graphic);
-        }
-
-        // Methods
-        public string GetBodyInfo()
-        {
-            string bodyInfo = "";
-            foreach (Vector2 vec2 in this.Body)
-            {
-                bodyInfo += vec2.ToString() + ";";
-            }
-            return bodyInfo;
-        }
-        public string GetPosCoordinates()
-        {
-            string posCoordinates = "";
-            foreach (Vector2 vec2 in this.Pos)
-            {
-                posCoordinates += vec2.ToString() + ";";
-            }
-            return posCoordinates;
-        }
-        public void SetPos(Vector2 pos)
-        {
-            for (int i = 0; i < this.Pos.Count; i++)
-            {
-                this.Pos[i] = this.Body[i] + pos;
-            }
-
-        }
-        public Vector2 GetPos()
-        {
-            if (this.Pos.Count > 0)
-                return this.Pos[0];
-            else
-                return new Vector2(0, 0);
-        }
-        public bool CollisionCheck(Vector2[] points)
-        {
-            foreach (Vector2 vector in points)
-            {
-                foreach (Vector2 vec2 in Body)
-                {
-                    if (vec2 == vector)
-                    {
-                        return true;
-                    }
-                }
-            }
-            return false;
-        }
-        public bool CollisionCheck(Vector2 movement, PhysicsBody physicsBody)
-        {
-            foreach (Vector2 selfPoints in this.Pos)
-            {
-                foreach (Vector2 targetPoints in physicsBody.Pos)
-                {
-                    if (selfPoints + movement == targetPoints)
-                    {
-                        return true;
-                    }
-                }
-            }
-            return false;
-        }
-
-        public void Move(Vector2 vector)
-        {
-            this.SetPos(this.GetPos() + vector);
-        }
-
-        public List<Vector2> GenerateBody(string[] graphic)
-        {
-            List<Vector2> body = new List<Vector2>();
-            for (int y = 0; y < graphic.Length; y++)
-            {
-                for (int x = 0; x < graphic[y].Length; x++)
-                {
-                    if (graphic[y][x] == ' ')
-                    {
-                        //continue;
-                        //body.Add(new Vector2(x, y));
-                        //Pos.Add(new Vector2(x, y));
-                    }
-                    body.Add(new Vector2(x, y));
-                    Pos.Add(new Vector2(x, y));
-                }
-            }
-
-            return body;
-        }
-
-        public IEnumerator<Vector2> GetEnumerator()
-        {
-            for (int i = 0; i < this.body.Count; i++)
-            {
-                yield return body[i];
-            }
-        }
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return GetEnumerator();
-        }
-    }
+    
 }
 

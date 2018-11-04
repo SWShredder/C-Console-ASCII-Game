@@ -10,6 +10,9 @@ namespace Game
 {
     public class GameObject : IPosition, IEnumerable<GameObject>, IMove, ISize, IPositionMatrix, IGraphics, IUpdate
     {
+        public delegate void ObjectPositionChangeEventHandler(object source, ObjectPositionEventArgs args);
+        public event ObjectPositionChangeEventHandler ObjectPositionChanged;
+
         // Static list of GameObjects
         static public List<GameObject> GameObjectList = new List<GameObject>();
 
@@ -29,7 +32,7 @@ namespace Game
                 graphics = value;
             }
         }
-        public PhysicsBody CollisionBody = new PhysicsBody();
+
         public PhysicsBody2 PhysicsBody2;
         private Vector2 position;
         public Vector2 Size
@@ -39,14 +42,21 @@ namespace Game
                 return this.Graphics.Size;
             }
         }
-        // Implementation of IPosition component.
+
+        ////// NEEDS TO BE REWORKED /////
+
         public Vector2 Position
         {
             set
             {
                 Program.Map.OnPositionUpdate(this, value);
                 //this.Body.SetPos(value);
+                Vector2 oldPosition = position;                
                 this.position = value;
+                /*if(Systems.Camera.ActiveCamera != null)
+                    Systems.Camera.ActiveCamera.CameraUpdateForObject(value);*/
+                Systems.Camera.ActiveCamera.NotifyCameraPositionChange(this, value);
+                OnObjectPositionChanged(oldPosition, value);
             }
             get
             {
@@ -56,6 +66,16 @@ namespace Game
             }
 
         }
+
+        protected virtual void OnObjectPositionChanged(Vector2 oldPosition, Vector2 newPosition)
+        {
+            ObjectPositionChanged?.Invoke(this, new ObjectPositionEventArgs()
+            {
+                OldPosition = oldPosition,
+                NewPosition = newPosition,
+            });
+        }
+
 
         public virtual void Update()
         {
@@ -68,8 +88,8 @@ namespace Game
         // Class constructor adds GameObject to the static list.
         private void Initialize()
         {
-            GameObjectList.Add(this);
             GraphicSet = new Graphics(this);
+            GameObjectList.Add(this);
             Systems.Update.Register(this);
         }
 
@@ -81,6 +101,7 @@ namespace Game
         }
         public GameObject(string[] graphics, ConsoleColor[,] colorMatrix)
         {
+            Initialize();
             Graphics = new Sprite(graphics, colorMatrix);
             PhysicsBody2 = new PhysicsBody2(Graphics);
         }
@@ -155,6 +176,8 @@ namespace Game
         public bool CheckCollision(Vector2 movement)
         {
             Vector2 direction = movement + this.Position;
+            if (direction.X < 0 || direction.Y < 0)
+                return true;
             return Program.Map.CollisionCheck(this, direction);
         }
 
@@ -215,7 +238,7 @@ namespace Game
                 Program.GameExit = true;
             }
         }
-        
+
         public void Move(Vector2 coords)
         {
             // Handles player movespeed.(Needs to be improved and decoupled)

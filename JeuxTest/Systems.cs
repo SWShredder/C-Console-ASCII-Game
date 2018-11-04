@@ -12,7 +12,7 @@ namespace Game
 {
     public class Systems
     {
-
+        public static Display CurrentDisplay;
 
 
         public class Display : IUpdate
@@ -20,7 +20,7 @@ namespace Game
             // Initialization
             public Display()
             {
-                Systems.Update.Register(this);
+                CurrentDisplay = this;
             }
 
             // Update method from IUpdate interface
@@ -165,10 +165,12 @@ namespace Game
 
         public class ScreenRenderer
         {
+
+            static private ScreenRenderer instance;
             static public ScreenRenderer Instance
             {
-                private set => Instance = value;
-                get => Instance;
+                private set => instance = value;
+                get => instance;
             }
 
             List<DrawRequestEventArgs> DrawRequests;
@@ -176,17 +178,25 @@ namespace Game
 
             public ScreenRenderer()
             {
+                Instance = this;
                 DrawRequests = new List<DrawRequestEventArgs>();
+
             }
 
             public void OnDrawRequest(object source, DrawRequestEventArgs args)
             {
-                DrawRequests.Add(args);
+                //DrawRequests.Add(args);
+                if (Program.RenderMode >= 2)
+                    RenderRequest(source, args);
+            }
+
+            public void OnCameraPositionChanged(object source, CameraPositionEventArgs args)
+            {
             }
 
             public void Update()
             {
-                DoDrawRequests(ref DrawRequests);
+                //DoDrawRequests(ref DrawRequests);
             }
 
 
@@ -197,34 +207,41 @@ namespace Game
             {
                 foreach (DrawRequestEventArgs args in requestList)
                 {
-                    RenderRequest(args);
-
+                    //RenderRequest(args);
                 }
                 requestList = new List<DrawRequestEventArgs>();
             }
 
 
 
-            private void RenderRequest(DrawRequestEventArgs args)
+            private void RenderRequest(object source, DrawRequestEventArgs args)
             {
-                Vector2 oldPosition = args.OldScreenPosition;
-                Vector2 newPosition = args.ScreenPosition;
+                GameObject gameObject = source as GameObject;
+                Vector2 oldPosition = args.OldPosition;
+                Vector2 newPosition = args.NewPosition;
                 Sprite spriteToDraw = args.Sprite;
                 Vector2 cameraPosition = Camera.ActiveCamera.Position;
                 Vector2 cameraSize = Camera.ActiveCamera.Size;
 
 
-                if (spriteToDraw == null || newPosition == null) return;
-                if ((newPosition.X + spriteToDraw.Size.X) < cameraPosition.X) return;
-                if ((newPosition.X + spriteToDraw.Size.Y) < cameraPosition.Y) return;
-                if (newPosition.X > cameraSize.X || newPosition.Y > cameraSize.Y) return;
+                //Vector2 oldScreenPosition = oldPosition - cameraPosition;
+                //Vector2 newScreenPosition = newPosition - cameraPosition;
+                if (!(oldPosition + spriteToDraw.Size < 0) && !(oldPosition > cameraSize))
+                {
+                    if (oldPosition != null)
+                        Draw(spriteToDraw, oldPosition, true);
 
-                if (oldPosition != null)
-                    Erase(spriteToDraw, oldPosition);
+                }
+
+                if (newPosition == oldPosition) return;
+                if (spriteToDraw == null && newPosition == null) return;
+                if (newPosition + spriteToDraw.Size < 0) return;
+                if (!(newPosition < cameraSize)) return;
 
                 Draw(spriteToDraw, newPosition);
             }
-            private void Erase(Sprite sprite, Vector2 position)
+
+            private void Draw(Sprite sprite, Vector2 position, bool erase = false)
             {
                 Vector2 cameraPosition = Camera.ActiveCamera.Position;
                 Vector2 cameraSize = Camera.ActiveCamera.Size;
@@ -233,20 +250,26 @@ namespace Game
                 {
                     for (int x = 0; x < sprite.Size.X; x++)
                     {
-                        if (position.X + x < cameraPosition.X || position.Y + y < cameraPosition.Y) continue;
-                        if (position.X + x > cameraSize.X || position.Y + y > cameraSize.Y) continue;
+                        if ((position.X + x) < 0 || (position.Y + y) < 0) continue;
+                        if ((position.X + x) > cameraSize.X || (position.Y + y) > cameraSize.Y) continue;
                         if (sprite[x, y].Char != ' ')
-                        {                         
-                            if(Console.CursorLeft != position.X + x || Console.CursorTop != position.Y + y)
+                        {
+                            if (Console.CursorLeft != position.X + x || Console.CursorTop != position.Y + y)
                                 Console.SetCursorPosition(position.X + x, position.Y + y);
-                            Console.Write(' ');
+
+                            if (erase)
+                                Console.Write(' ');
+                            else
+                            {
+                                if (sprite[x, y].Color != ConsoleColor.Gray)
+                                    Console.ForegroundColor = sprite[x, y].Color;
+                                Console.Write(sprite[x, y].Char);
+                                Console.ForegroundColor = ConsoleColor.Gray;
+
+                            }
                         }
                     }
                 }
-            }
-            private void Draw(Sprite sprite, Vector2 position)
-            {
-
             }
 
         }
@@ -270,6 +293,11 @@ namespace Game
             public string[] EmptyCanvas;
             public Sprite ScreenRender;
             private GameObject objectFocused;
+            public GameObject ObjectFocused
+            {
+                set => objectFocused = value;
+                get => objectFocused;
+            }
             private Vector2 size = new Vector2(Console.WindowWidth - SizeOffsetX, Console.WindowHeight - SizeOffsetY);
             public Vector2 Size
             {
@@ -304,18 +332,13 @@ namespace Game
             {
                 set
                 {
-                    if (value.X < 0)
-                        value.X = 0;
-                    if (value.Y < 0)
-                        value.Y = 0;
-                    if (value.X > Program.Map.Size.X - this.Size.X)
-                        value.X = Program.Map.Size.X - this.Size.X;
-                    if (value.Y > Program.Map.Size.Y - this.Size.Y)
-                        value.Y = Program.Map.Size.Y - this.Size.Y;
-                    if (value.X == position.X && value.Y == position.Y)
+                    Vector2 oldPosition = position;
+
+                    if (oldPosition == value)
                         return;
+
                     position = value;
-                    OnCameraPositionChanged(position, Size);
+                    OnCameraPositionChanged(oldPosition, position, Size);
                 }
                 get
                 {
@@ -324,31 +347,32 @@ namespace Game
             }
 
 
-
-
             // Implementation of IUpdate interface
             public void Update()
             {
-                if (objectFocused != null)
-                    Position = objectFocused.Position + objectFocused.Size - Offset;
-                else
-                    Position = new Vector2(0, 0);
-                ScreenRender = RenderSpace(Program.Map);
+
+                //Position = ObjectFocused.Position + ObjectFocused.Size - Offset;
+
+
+                if (Program.RenderMode <= 1)
+                    ScreenRender = RenderSpace(Program.Map);
             }
+
             public Camera()
             {
                 Offset = new Vector2(Size.X / 2, Size.Y / 2);
                 RelativePosition = Position + Offset;
-                Systems.Update.Register(this);
                 ActiveCamera = this;
+                Position = new Vector2(0, 0);
             }
 
 
-            protected virtual void OnCameraPositionChanged(Vector2 position, Vector2 size)
+            protected virtual void OnCameraPositionChanged(Vector2 oldPosition, Vector2 newPosition, Vector2 size)
             {
                 CameraPositionChanged?.Invoke(this, new CameraPositionEventArgs()
                 {
-                    Position = position,
+                    OldPosition = oldPosition,
+                    NewPosition = newPosition,
                     Size = size,
                 });
             }
@@ -358,6 +382,7 @@ namespace Game
             public void SetFocus(GameObject obj)
             {
                 objectFocused = obj;
+                //obj.ObjectPositionChanged += OnObjectFocusPositionChanged;
             }
 
             public void SetFocus(Vector2 vector)
@@ -366,7 +391,38 @@ namespace Game
             }
 
 
+            public void OnObjectFocusPositionChanged(object source, ObjectPositionEventArgs args)
+            {
+                Vector2 newObjectPosition = args.NewPosition;
+                Vector2 newCameraPosition = GetNormalizedCameraPosition((newObjectPosition + ObjectFocused.Size - Offset));
 
+                Position = newCameraPosition;
+
+            }
+            public void NotifyCameraPositionChange(GameObject source, Vector2 newObjPosition)
+            {
+                if (ObjectFocused == null || source != ObjectFocused)
+                    return;
+                Vector2 newObjectPosition = newObjPosition;
+                Vector2 newCameraPosition = GetNormalizedCameraPosition((newObjectPosition + ObjectFocused.Size - Offset));
+
+                Position = newCameraPosition;
+
+            }
+
+            private Vector2 GetNormalizedCameraPosition(Vector2 newCameraPosition)
+            {
+                if (newCameraPosition.X < 0)
+                    newCameraPosition.X = 0;
+                if (newCameraPosition.Y < 0)
+                    newCameraPosition.Y = 0;
+                if (newCameraPosition.X > Program.Map.Size.X - this.Size.X)
+                    newCameraPosition.X = Program.Map.Size.X - this.Size.X;
+                if (newCameraPosition.Y > Program.Map.Size.Y - this.Size.Y)
+                    newCameraPosition.Y = Program.Map.Size.Y - this.Size.Y;
+
+                return newCameraPosition;
+            }
 
 
             public Sprite RenderSpace(Physics.Space space)
@@ -448,15 +504,21 @@ namespace Game
                     if (DeltaTime < 200)
                         Console.Write(DeltaTime);
                     Console.Write("\n" + Program.Game.player.Position + "  ");
-                    Console.Write(Program.Map.SpaceArray[0, 6]);
+
 
 
                     updateTicks = time.Ticks;
+
                     //Propagate the Update pulse among the registered objects
                     foreach (object obj in Registry)
                     {
                         UpdateComponents(obj as IUpdate);
                     }
+                    if (Program.RenderMode == 2)
+                        ScreenRenderer.Instance.Update();
+                    else if (Program.RenderMode <= 1)
+                        CurrentDisplay.Update();
+                    Camera.ActiveCamera.Update();
                 }
             }
             private static void UpdateComponents(IUpdate obj)

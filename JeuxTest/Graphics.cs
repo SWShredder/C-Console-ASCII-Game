@@ -46,7 +46,7 @@ namespace Game
             get => TileTable[x, y];
             set => TileTable[x, y] = value;
         }
-        
+
 
 
         // INITIALIZATION
@@ -245,9 +245,10 @@ namespace Game
         {
             get
             {
-                if(currentFrame == null)
+                if (currentFrame == null)
                 {
                     currentFrame = new Frame((parent as GameObject).Graphics);
+
                 }
                 return currentFrame;
             }
@@ -277,29 +278,50 @@ namespace Game
             Systems.Camera.ActiveCamera.CameraPositionChanged += OnCameraPositionChanged;
             // Signal registry for ScreenRenderer
             DrawRequest += Program.ScreenRenderer.OnDrawRequest;
+            // Signal registry with Parent
+            (parent as GameObject).ObjectPositionChanged += OnParentObjectPositionChanged;
+
         }
 
-        protected virtual void OnDrawRequest(Vector2 oldScreenPosition, Vector2 newScreenPosition)
+
+
+        protected virtual void OnDrawRequest(Vector2 oldPosition, Vector2 newPosition)
         {
-            DrawRequest?.Invoke(this, new DrawRequestEventArgs()
+            DrawRequest?.Invoke(parent, new DrawRequestEventArgs()
             {
-                OldScreenPosition = oldScreenPosition,
-                ScreenPosition = newScreenPosition,
+                OldPosition = oldPosition,
+                NewPosition = newPosition,
                 Sprite = CurrentFrame.Sprite,
             });
         }
 
+
+        public void OnParentObjectPositionChanged(object source, ObjectPositionEventArgs args)
+        {
+            // Insert New code Here; 
+            /*Vector2 oldPosition = args.OldPosition;
+            Vector2 newPosition = args.NewPosition;
+            Vector2 parentPosition = (source as IPosition).Position;
+            OnDrawRequest(oldPosition, newPosition);*/
+
+            Vector2 oldPosition = args.OldPosition - Systems.Camera.ActiveCamera.Position;
+            Vector2 newPosition = args.NewPosition - Systems.Camera.ActiveCamera.Position;
+            OnDrawRequest(oldPosition, newPosition);
+        }
+
         public void OnCameraPositionChanged(object source, CameraPositionEventArgs args)
         {
+            Vector2 oldCameraPosition = args.OldPosition;
+            Vector2 newCameraPosition = args.NewPosition;
+
+           if (Systems.Camera.ActiveCamera.ObjectFocused == Parent)
+                return;
             Vector2 parentPosition = (Parent as IPosition) != null ? (Parent as IPosition).Position : new Vector2(0, 0);
-            Vector2 cameraPosition = args.Position;
-            Vector2 cameraSize = args.Size;
-            if(ScreenPosition != parentPosition - cameraPosition)
-            {
-                Vector2 oldScreenPosition = ScreenPosition;
-                ScreenPosition = parentPosition - cameraPosition;
-                OnDrawRequest(oldScreenPosition, ScreenPosition);
-            }
+
+            Vector2 oldParentScreenPosition = parentPosition - oldCameraPosition;
+            Vector2 newParentScreenPosition = parentPosition - newCameraPosition;
+
+            OnDrawRequest(oldParentScreenPosition , newParentScreenPosition);
         }
     }
 }

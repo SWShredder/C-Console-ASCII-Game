@@ -9,15 +9,23 @@ namespace Game
 {
     public class CameraPositionEventArgs : EventArgs
     {
-        public Vector2 Position { set; get; }
+        public Vector2 OldPosition { set; get; }
+        public Vector2 NewPosition { set; get; }
         public Vector2 Size { set; get; }
     }
 
     public class DrawRequestEventArgs : EventArgs
     {
-        public Vector2 OldScreenPosition { set; get; }
-        public Vector2 ScreenPosition { set; get; }
+        public Vector2 OldPosition { set; get; }
+        public Vector2 NewPosition { set; get; }
         public Sprite Sprite { set; get; }
+
+    }
+
+    public class ObjectPositionEventArgs : EventArgs
+    {
+        public Vector2 OldPosition { set; get; }
+        public Vector2 NewPosition { set; get; }
     }
 
     static public class Utility
@@ -36,6 +44,7 @@ namespace Game
     {
         private int x;
         private int y;
+        
 
         public Vector2(int c_x, int c_y)
         {
@@ -87,6 +96,27 @@ namespace Game
             vec2.Y = vecA.Y - vecB.Y;
             return vec2;
         }
+
+        public static bool operator < (Vector2 vecA, int intA)
+        {
+            return vecA.X < intA && vecA.Y < intA;
+        }
+
+        public static bool operator >(Vector2 vecA, int intA)
+        {
+            return vecA.X > intA && vecA.Y > intA;
+        }
+
+        public static bool operator < (Vector2 vecA, Vector2 vecB)
+        {
+            return vecA.X < vecB.X && vecA.Y < vecB.Y;
+        }
+
+        public static bool operator >(Vector2 vecA, Vector2 vecB)
+        {
+            return vecA.X > vecB.X && vecA.Y > vecB.Y;
+        }
+
     }
     public class Matrix : ISize
     {
@@ -187,7 +217,7 @@ namespace Game
 
     interface ICollision
     {
-        PhysicsBody CollisionBody { set; get; }
+        PhysicsBody2 CollisionBody { set; get; }
     }
     interface IMove
     {
@@ -205,4 +235,6 @@ namespace Game
     {
         void Input(System.Windows.Input.Keyboard keyboard);
     }
+
+
 }
