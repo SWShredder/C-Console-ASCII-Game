@@ -51,7 +51,8 @@ namespace Game
 
 
         // Generates temp files.
-        public static int RenderMode = 1;
+        public static int RenderMode = 2;
+        public static Vector2 ScreenSize = new Vector2((int)(Console.LargestWindowWidth / 1.5), (int)(Console.LargestWindowHeight / 1.5));
         public static Physics.Space Map = new Physics.Space(new Vector2(400, 400));
         public static Systems.Camera Camera = new Systems.Camera();
         public static Program Game = new Program();
@@ -65,17 +66,18 @@ namespace Game
 
         void GameInit()
         {
-            player = new Player(PlayerGraphic, PlayerGraphicColorMatrix);
-            PopulateAsteroid(new Vector2(20, 20));
-            PopulateAsteroid(new Vector2(150, 30));
-            PopulateAsteroid(new Vector2(35, 50));
             Console.SetBufferSize((int)(Console.LargestWindowWidth), (int)(Console.LargestWindowHeight));
-            Console.SetWindowSize((int)(Console.LargestWindowWidth / 1.5), (int)(Console.LargestWindowHeight / 1.5));
+            Console.SetWindowSize(ScreenSize.X, ScreenSize.Y);
             Console.CursorVisible = false;
-            player.Position = new Vector2(10, 10);
-            Camera.SetFocus(player);
             Camera.FitScreenSize();
 
+            player = new Player(PlayerGraphic, PlayerGraphicColorMatrix) { Position = new Vector2(10,10) };
+            Camera.SetFocus(player);
+
+            PopulateAsteroid(new Vector2(20, 20));
+            PopulateAsteroid(new Vector2(150, 30));
+            PopulateAsteroid(new Vector2(35, 50));        
+      
         }
 
 

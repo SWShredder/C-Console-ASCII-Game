@@ -135,6 +135,11 @@ namespace Game
                 Char = _char;
                 Color = _color;
             }
+            public Tile(char _char)
+            {
+                Char = _char;
+                Color = ConsoleColor.Gray;
+            }
             public override string ToString()
             {
                 return String.Format("'{0}':{1}", Char, Color);

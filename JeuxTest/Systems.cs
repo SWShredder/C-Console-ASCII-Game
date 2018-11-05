@@ -37,7 +37,10 @@ namespace Game
                     DrawNoColor(Program.Camera.ScreenRender, true);
                     DrawColorLayer(Program.Camera.ScreenRender);
                 }
-
+                if (Program.RenderMode == 2)
+                {
+                    ScreenRenderer.Instance.ScreenBuffer.Draw();
+                }
             }
 
 
@@ -173,6 +176,15 @@ namespace Game
                 get => instance;
             }
 
+            public Frame Render = new Frame() { Size = Program.ScreenSize };
+            public ScreenBuffer ScreenBuffer
+            {
+                get
+                {
+                    return new ScreenBuffer() { Size = Program.ScreenSize, Sprite = Render.Sprite };
+                }
+            }
+
             List<DrawRequestEventArgs> DrawRequests;
             // List<EraseRequestEventArgs> EraseRequests;
 
@@ -251,27 +263,33 @@ namespace Game
                     for (int x = 0; x < sprite.Size.X; x++)
                     {
                         if ((position.X + x) < 0 || (position.Y + y) < 0) continue;
-                        if ((position.X + x) > cameraSize.X || (position.Y + y) > cameraSize.Y) continue;
+                        if ((position.X + x) >= cameraSize.X || (position.Y + y) >= cameraSize.Y) continue;
                         if (sprite[x, y].Char != ' ')
                         {
                             if (Console.CursorLeft != position.X + x || Console.CursorTop != position.Y + y)
                                 Console.SetCursorPosition(position.X + x, position.Y + y);
 
                             if (erase)
-                                Console.Write(' ');
+                            {
+                                //Console.Write(' ');
+                                Render.Sprite[position.X + x, position.Y + y] = new Sprite.Tile(' ');
+                            }
+
+
                             else
                             {
-                                if (sprite[x, y].Color != ConsoleColor.Gray)
-                                    Console.ForegroundColor = sprite[x, y].Color;
-                                Console.Write(sprite[x, y].Char);
-                                Console.ForegroundColor = ConsoleColor.Gray;
-
+                                Render.Sprite[position.X + x, position.Y + y] = sprite[x, y];
                             }
+                            /*if (sprite[x, y].Color != ConsoleColor.Gray)
+                                Console.ForegroundColor = sprite[x, y].Color;
+                            Console.Write(sprite[x, y].Char);
+                            Console.ForegroundColor = ConsoleColor.Gray;*/
+
+
                         }
                     }
                 }
             }
-
         }
 
 
@@ -495,15 +513,11 @@ namespace Game
             public static void Process(DateTime time)
             {
                 // There are 10000 ticks in a millisecond.
-                if ((time.Ticks - updateTicks) / 10000.0 >= 15)
+                if ((time.Ticks - updateTicks) / 10000.0 >= 15.0)
                 {
                     // Handles the update of the ticks and time data for the game systems.
                     DeltaTime = (time.Ticks - updateTicks) / 10000.0;
-                    Console.SetCursorPosition(0, Console.WindowHeight - 2);
 
-                    if (DeltaTime < 200)
-                        Console.Write(DeltaTime);
-                    Console.Write("\n" + Program.Game.player.Position + "  ");
 
 
 
@@ -518,7 +532,19 @@ namespace Game
                         ScreenRenderer.Instance.Update();
                     else if (Program.RenderMode <= 1)
                         CurrentDisplay.Update();
+
                     Camera.ActiveCamera.Update();
+                    if(Program.RenderMode == 2)
+                    {
+                        CurrentDisplay.Update();
+                    }
+
+
+                    Console.SetCursorPosition(0, Console.WindowHeight - 2);
+
+                    if (DeltaTime < 200)
+                        Console.Write(DeltaTime);
+                    Console.Write("\n" + Program.Game.player.Position + "  ");
                 }
             }
             private static void UpdateComponents(IUpdate obj)
