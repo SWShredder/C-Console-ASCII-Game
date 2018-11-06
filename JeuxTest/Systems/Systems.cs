@@ -5,10 +5,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Input;
-using static Game.Utility;
+using static AsciiEngine.Utility;
 
 
-namespace Game
+namespace AsciiEngine
 {
     public class Systems
     {
@@ -27,20 +27,11 @@ namespace Game
             public void Update()
             {
                 // No color but the fastest render.
-                if (Program.RenderMode == 0)
-                {
-                    DrawNoColor(Program.Camera.ScreenRender);
-                }
+
                 // Color Mode with render from layer and backbuffer.
-                if (Program.RenderMode == 1)
-                {
-                    DrawNoColor(Program.Camera.ScreenRender, true);
-                    DrawColorLayer(Program.Camera.ScreenRender);
-                }
-                if (Program.RenderMode == 2)
-                {
-                    ScreenRenderer.Instance.ScreenBuffer.Draw();
-                }
+
+                ScreenRenderer.Instance.ScreenBuffer.Draw();
+
             }
 
 
@@ -80,8 +71,8 @@ namespace Game
                 Vector2 objSize = (frame as ISize) != null ? (frame as ISize).Size : Vec2(0, 0);
                 Sprite objSprite = (frame as IGraphics) != null ? (frame as IGraphics).Graphics : (Sprite)frame;
 
-                Vector2 CameraPosition = Program.Camera.Position;
-                Vector2 CameraSize = Program.Camera.Size;
+                Vector2 CameraPosition = Core.Camera.Position;
+                Vector2 CameraSize = Core.Camera.Size;
                 Vector2 objScreenPosition = objPosition - CameraPosition;
 
                 if ((objScreenPosition + objSize).X < 0 || (objScreenPosition + objSize).Y < 0)
@@ -118,8 +109,8 @@ namespace Game
                 Vector2 objSize = (frame as ISize) != null ? (frame as ISize).Size : Vec2(0, 0);
                 Sprite objSprite = (frame as IGraphics) != null ? (frame as IGraphics).Graphics : (Sprite)frame;
 
-                Vector2 CameraPosition = Program.Camera.Position;
-                Vector2 CameraSize = Program.Camera.Size;
+                Vector2 CameraPosition = Core.Camera.Position;
+                Vector2 CameraSize = Core.Camera.Size;
                 Vector2 objScreenPosition = objPosition - CameraPosition;
 
                 if ((objScreenPosition + objSize).X < 0 || (objScreenPosition + objSize).Y < 0)
@@ -176,12 +167,12 @@ namespace Game
                 get => instance;
             }
 
-            public Frame Render = new Frame() { Size = Program.ScreenSize };
+            public Frame Render = new Frame() { Size = Core.ScreenSize };
             public ScreenBuffer ScreenBuffer
             {
                 get
                 {
-                    return new ScreenBuffer() { Size = Program.ScreenSize, Sprite = Render.Sprite };
+                    return new ScreenBuffer() { Size = Core.ScreenSize, Sprite = Render.Sprite };
                 }
             }
 
@@ -198,7 +189,7 @@ namespace Game
             public void OnDrawRequest(object source, DrawRequestEventArgs args)
             {
                 //DrawRequests.Add(args);
-                if (Program.RenderMode >= 2)
+                if (Core.RenderMode >= 2)
                     RenderRequest(source, args);
             }
 
@@ -293,214 +284,6 @@ namespace Game
         }
 
 
-
-
-        public class Camera : IUpdate, IPosition
-        {
-            static public Camera ActiveCamera;
-
-            public delegate void CameraPositionChangeEventHandler(object source, CameraPositionEventArgs args);
-            public event CameraPositionChangeEventHandler CameraPositionChanged;
-
-            const int SizeOffsetX = 0;
-            const int SizeOffsetY = 2;
-            private Vector2 position = new Vector2(0, 0);
-
-            public Vector2 Offset;
-            public Vector2 RelativePosition;
-            public string[] EmptyCanvas;
-            public Sprite ScreenRender;
-            private GameObject objectFocused;
-            public GameObject ObjectFocused
-            {
-                set => objectFocused = value;
-                get => objectFocused;
-            }
-            private Vector2 size = new Vector2(Console.WindowWidth - SizeOffsetX, Console.WindowHeight - SizeOffsetY);
-            public Vector2 Size
-            {
-                get
-                {
-                    return this.size;
-                }
-                set
-                {
-                    size = value;
-                    Offset = new Vector2(value.X / 2, value.Y / 2);
-                }
-            }
-            private ScreenCanvas cameraCanvas;
-            private ScreenCanvas CameraCanvas
-            {
-                get
-                {
-                    if (cameraCanvas == null || (cameraCanvas as ISize).Size != this.Size)
-                    {
-                        cameraCanvas = new ScreenCanvas(this.Size);
-                    }
-                    return cameraCanvas;
-                }
-                set
-                {
-                    cameraCanvas = value;
-                }
-            }
-
-            public Vector2 Position
-            {
-                set
-                {
-                    Vector2 oldPosition = position;
-
-                    if (oldPosition == value)
-                        return;
-
-                    position = value;
-                    OnCameraPositionChanged(oldPosition, position, Size);
-                }
-                get
-                {
-                    return position;
-                }
-            }
-
-
-            // Implementation of IUpdate interface
-            public void Update()
-            {
-
-                //Position = ObjectFocused.Position + ObjectFocused.Size - Offset;
-
-
-                if (Program.RenderMode <= 1)
-                    ScreenRender = RenderSpace(Program.Map);
-            }
-
-            public Camera()
-            {
-                Offset = new Vector2(Size.X / 2, Size.Y / 2);
-                RelativePosition = Position + Offset;
-                ActiveCamera = this;
-                Position = new Vector2(0, 0);
-            }
-
-
-            protected virtual void OnCameraPositionChanged(Vector2 oldPosition, Vector2 newPosition, Vector2 size)
-            {
-                CameraPositionChanged?.Invoke(this, new CameraPositionEventArgs()
-                {
-                    OldPosition = oldPosition,
-                    NewPosition = newPosition,
-                    Size = size,
-                });
-            }
-
-
-
-            public void SetFocus(GameObject obj)
-            {
-                objectFocused = obj;
-                //obj.ObjectPositionChanged += OnObjectFocusPositionChanged;
-            }
-
-            public void SetFocus(Vector2 vector)
-            {
-                Position = vector - Offset;
-            }
-
-
-            public void OnObjectFocusPositionChanged(object source, ObjectPositionEventArgs args)
-            {
-                Vector2 newObjectPosition = args.NewPosition;
-                Vector2 newCameraPosition = GetNormalizedCameraPosition((newObjectPosition + ObjectFocused.Size - Offset));
-
-                Position = newCameraPosition;
-
-            }
-            public void NotifyCameraPositionChange(GameObject source, Vector2 newObjPosition)
-            {
-                if (ObjectFocused == null || source != ObjectFocused)
-                    return;
-                Vector2 newObjectPosition = newObjPosition;
-                Vector2 newCameraPosition = GetNormalizedCameraPosition((newObjectPosition + ObjectFocused.Size - Offset));
-
-                Position = newCameraPosition;
-
-            }
-
-            private Vector2 GetNormalizedCameraPosition(Vector2 newCameraPosition)
-            {
-                if (newCameraPosition.X < 0)
-                    newCameraPosition.X = 0;
-                if (newCameraPosition.Y < 0)
-                    newCameraPosition.Y = 0;
-                if (newCameraPosition.X > Program.Map.Size.X - this.Size.X)
-                    newCameraPosition.X = Program.Map.Size.X - this.Size.X;
-                if (newCameraPosition.Y > Program.Map.Size.Y - this.Size.Y)
-                    newCameraPosition.Y = Program.Map.Size.Y - this.Size.Y;
-
-                return newCameraPosition;
-            }
-
-
-            public Sprite RenderSpace(Physics.Space space)
-            {
-
-                Vector2 index = new Vector2(0, 0);
-                Sprite render = CameraCanvas.Canvas;
-                for (int y = this.Position.Y; y < this.Position.Y + this.Size.Y; y++)
-                {
-                    index.X = 0;
-                    for (int x = this.Position.X; x < this.Position.X + this.Size.X; x++)
-                    {
-                        if (space[x, y] != null)
-                        {
-                            GameObject gameObject = space[x, y];
-                            Vector2 relativePosition = new Vector2(x, y) - gameObject.Position;
-                            if (relativePosition.X < gameObject.Graphics.Size.X
-                                && relativePosition.Y < gameObject.Graphics.Size.Y)
-                            {
-                                render[index.X, index.Y] = gameObject.Graphics[relativePosition.X, relativePosition.Y];
-                            }
-                        }
-                        index.X++;
-                    }
-                    index.Y++;
-                }
-                return render;
-            }
-
-
-
-
-
-            public void FitScreenSize()
-            {
-                this.Size = GetWindowSize() - new Vector2(SizeOffsetX, SizeOffsetY);
-            }
-
-            private class ScreenCanvas : ISize
-            {
-                public Sprite Canvas;
-                public Vector2 Size => (Canvas as ISize).Size;
-
-                public ScreenCanvas(Vector2 size)
-                {
-                    Canvas = new Sprite(GenerateCanvas(size));
-                }
-
-                private string[] GenerateCanvas(Vector2 size)
-                {
-                    string[] canvas = new string[size.Y];
-                    for (int y = 0; y < size.Y; y++)
-                    {
-                        canvas[y] = new string(' ', size.X);
-                    }
-                    return canvas;
-                }
-            }
-
-        }
         public static class Update
         {
             // The delta of Ticks between each loops. 
@@ -528,13 +311,13 @@ namespace Game
                     {
                         UpdateComponents(obj as IUpdate);
                     }
-                    if (Program.RenderMode == 2)
+                    if (Core.RenderMode == 2)
                         ScreenRenderer.Instance.Update();
-                    else if (Program.RenderMode <= 1)
+                    else if (Core.RenderMode <= 1)
                         CurrentDisplay.Update();
 
                     Camera.ActiveCamera.Update();
-                    if(Program.RenderMode == 2)
+                    if (Core.RenderMode == 2)
                     {
                         CurrentDisplay.Update();
                     }
@@ -544,7 +327,7 @@ namespace Game
 
                     if (DeltaTime < 200)
                         Console.Write(DeltaTime);
-                    Console.Write("\n" + Program.Game.player.Position + "  ");
+                    Console.Write("\n" + Core.Engine.player.Position + "  ");
                 }
             }
             private static void UpdateComponents(IUpdate obj)

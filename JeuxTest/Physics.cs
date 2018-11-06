@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Collections;
 
 
-namespace Game
+namespace AsciiEngine
 {
     public class Physics
     {

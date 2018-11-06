@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using static Game.Utility;
+using static AsciiEngine.Utility;
 
-namespace Game
+namespace AsciiEngine
 {
 
     public class Sprite : ISize, IPosition
@@ -280,9 +280,9 @@ namespace Game
         {
             parent = _parent;
             // Signal registry for Camera
-            Systems.Camera.ActiveCamera.CameraPositionChanged += OnCameraPositionChanged;
+            Camera.ActiveCamera.CameraPositionChanged += OnCameraPositionChanged;
             // Signal registry for ScreenRenderer
-            DrawRequest += Program.ScreenRenderer.OnDrawRequest;
+            DrawRequest += Core.ScreenRenderer.OnDrawRequest;
             // Signal registry with Parent
             (parent as GameObject).ObjectPositionChanged += OnParentObjectPositionChanged;
 
@@ -309,8 +309,8 @@ namespace Game
             Vector2 parentPosition = (source as IPosition).Position;
             OnDrawRequest(oldPosition, newPosition);*/
 
-            Vector2 oldPosition = args.OldPosition - Systems.Camera.ActiveCamera.Position;
-            Vector2 newPosition = args.NewPosition - Systems.Camera.ActiveCamera.Position;
+            Vector2 oldPosition = args.OldPosition - Camera.ActiveCamera.Position;
+            Vector2 newPosition = args.NewPosition - Camera.ActiveCamera.Position;
             OnDrawRequest(oldPosition, newPosition);
         }
 
@@ -319,7 +319,7 @@ namespace Game
             Vector2 oldCameraPosition = args.OldPosition;
             Vector2 newCameraPosition = args.NewPosition;
 
-           if (Systems.Camera.ActiveCamera.ObjectFocused == Parent)
+           if (Camera.ActiveCamera.ObjectFocused == Parent)
                 return;
             Vector2 parentPosition = (Parent as IPosition) != null ? (Parent as IPosition).Position : new Vector2(0, 0);
 

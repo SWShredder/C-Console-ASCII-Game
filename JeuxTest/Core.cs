@@ -6,9 +6,9 @@ using System.Threading.Tasks;
 using System.Windows.Input; // Nécéssite une référence dll
 using static System.ConsoleColor;
 
-namespace Game
+namespace AsciiEngine
 {
-    public class Program
+    public class Core
     {
 
 
@@ -54,8 +54,8 @@ namespace Game
         public static int RenderMode = 2;
         public static Vector2 ScreenSize = new Vector2((int)(Console.LargestWindowWidth / 1.5), (int)(Console.LargestWindowHeight / 1.5));
         public static Physics.Space Map = new Physics.Space(new Vector2(400, 400));
-        public static Systems.Camera Camera = new Systems.Camera();
-        public static Program Game = new Program();
+        public static Camera Camera = new Camera();
+        public static Core Engine = new Core();
         public static Systems.Display Display = new Systems.Display();
         public static Systems.ScreenRenderer ScreenRenderer = new Systems.ScreenRenderer();
         public static bool GameExit = false;
@@ -86,13 +86,13 @@ namespace Game
         [STAThread]
         static void Main(string[] args)
         {
-            Game.GameProcesses();
+            Engine.Processes();
         }
 
 
 
 
-        public void GameProcesses()
+        public void Processes()
         {
             GameInit();
             while (!GameExit)

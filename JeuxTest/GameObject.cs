@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Input;
 
-namespace Game
+namespace AsciiEngine
 {
     public class GameObject : IPosition, IEnumerable<GameObject>, IMove, ISize, IPositionMatrix, IGraphics, IUpdate
     {
@@ -24,7 +24,7 @@ namespace Game
             get
             {
                 if (graphics == null)
-                    graphics = new Sprite(Program.DefaultGraphics);
+                    graphics = new Sprite(Core.DefaultGraphics);
                 return graphics;
             }
             set
@@ -49,13 +49,13 @@ namespace Game
         {
             set
             {
-                Program.Map.OnPositionUpdate(this, value);
+                Core.Map.OnPositionUpdate(this, value);
                 //this.Body.SetPos(value);
                 Vector2 oldPosition = position;                
                 this.position = value;
-                /*if(Systems.Camera.ActiveCamera != null)
-                    Systems.Camera.ActiveCamera.CameraUpdateForObject(value);*/
-                Systems.Camera.ActiveCamera.NotifyCameraPositionChange(this, value);
+                /*if(Camera.ActiveCamera != null)
+                    Camera.ActiveCamera.CameraUpdateForObject(value);*/
+                Camera.ActiveCamera.NotifyCameraPositionChange(this, value);
                 OnObjectPositionChanged(oldPosition, value);
             }
             get
@@ -178,7 +178,7 @@ namespace Game
             Vector2 direction = movement + this.Position;
             if (direction.X < 0 || direction.Y < 0)
                 return true;
-            return Program.Map.CollisionCheck(this, direction);
+            return Core.Map.CollisionCheck(this, direction);
         }
 
     }
@@ -189,7 +189,7 @@ namespace Game
         private double moveSpeed = 80.0;
 
 
-        public Player() : base(Program.PlayerGraphic)
+        public Player() : base(Core.PlayerGraphic)
         {
             Systems.Update.Register(this);
             localTicks = 0;
@@ -235,7 +235,7 @@ namespace Game
             }
             if (System.Windows.Input.Keyboard.IsKeyDown(Key.Escape))
             {
-                Program.GameExit = true;
+                Core.GameExit = true;
             }
         }
 
@@ -248,7 +248,7 @@ namespace Game
             if (this.CheckCollision(coords))
                 return;
             // Handles Out of Bound error if player gets to edge of Space. Could be Refactored.
-            if ((this.Position + coords).X > Program.Map.Size.X || (this.Position + coords).Y > Program.Map.Size.Y)
+            if ((this.Position + coords).X > Core.Map.Size.X || (this.Position + coords).Y > Core.Map.Size.Y)
                 return;
             if ((Position + coords).X < 0 || (Position + coords).Y < 0)
                 return;

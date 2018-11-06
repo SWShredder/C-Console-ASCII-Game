@@ -6,9 +6,9 @@ using System.Threading.Tasks;
 using System.IO;
 using System.Runtime.InteropServices;
 using Microsoft.Win32.SafeHandles;
-using static Game.Utility;
+using static AsciiEngine.Utility;
 
-namespace Game
+namespace AsciiEngine
 {
     public class ScreenBuffer : IPosition, ISize
     {

@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Game
+namespace AsciiEngine
 {
     public class CameraPositionEventArgs : EventArgs
     {
