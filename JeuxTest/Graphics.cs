@@ -280,7 +280,7 @@ namespace AsciiEngine
         {
             parent = _parent;
             // Signal registry for Camera
-            Camera.ActiveCamera.CameraPositionChanged += OnCameraPositionChanged;
+            Camera.Instance.CameraPositionChanged += OnCameraPositionChanged;
             // Signal registry for ScreenRenderer
             DrawRequest += Core.ScreenRenderer.OnDrawRequest;
             // Signal registry with Parent
@@ -309,8 +309,8 @@ namespace AsciiEngine
             Vector2 parentPosition = (source as IPosition).Position;
             OnDrawRequest(oldPosition, newPosition);*/
 
-            Vector2 oldPosition = args.OldPosition - Camera.ActiveCamera.Position;
-            Vector2 newPosition = args.NewPosition - Camera.ActiveCamera.Position;
+            Vector2 oldPosition = args.OldPosition - Camera.Instance.Position;
+            Vector2 newPosition = args.NewPosition - Camera.Instance.Position;
             OnDrawRequest(oldPosition, newPosition);
         }
 
@@ -319,7 +319,7 @@ namespace AsciiEngine
             Vector2 oldCameraPosition = args.OldPosition;
             Vector2 newCameraPosition = args.NewPosition;
 
-           if (Camera.ActiveCamera.ObjectFocused == Parent)
+           if (Camera.Instance.ObjectFocused == Parent)
                 return;
             Vector2 parentPosition = (Parent as IPosition) != null ? (Parent as IPosition).Position : new Vector2(0, 0);
 

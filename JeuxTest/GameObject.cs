@@ -55,7 +55,7 @@ namespace AsciiEngine
                 this.position = value;
                 /*if(Camera.ActiveCamera != null)
                     Camera.ActiveCamera.CameraUpdateForObject(value);*/
-                Camera.ActiveCamera.NotifyCameraPositionChange(this, value);
+                Camera.Instance.NotifyCameraPositionChange(this, value);
                 OnObjectPositionChanged(oldPosition, value);
             }
             get

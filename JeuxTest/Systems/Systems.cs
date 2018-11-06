@@ -223,8 +223,8 @@ namespace AsciiEngine
                 Vector2 oldPosition = args.OldPosition;
                 Vector2 newPosition = args.NewPosition;
                 Sprite spriteToDraw = args.Sprite;
-                Vector2 cameraPosition = Camera.ActiveCamera.Position;
-                Vector2 cameraSize = Camera.ActiveCamera.Size;
+                Vector2 cameraPosition = Camera.Instance.Position;
+                Vector2 cameraSize = Camera.Instance.Size;
 
 
                 //Vector2 oldScreenPosition = oldPosition - cameraPosition;
@@ -246,8 +246,8 @@ namespace AsciiEngine
 
             private void Draw(Sprite sprite, Vector2 position, bool erase = false)
             {
-                Vector2 cameraPosition = Camera.ActiveCamera.Position;
-                Vector2 cameraSize = Camera.ActiveCamera.Size;
+                Vector2 cameraPosition = Camera.Instance.Position;
+                Vector2 cameraSize = Camera.Instance.Size;
 
                 for (int y = 0; y < sprite.Size.Y; y++)
                 {
@@ -316,7 +316,7 @@ namespace AsciiEngine
                     else if (Core.RenderMode <= 1)
                         CurrentDisplay.Update();
 
-                    Camera.ActiveCamera.Update();
+                    Camera.Instance.Update();
                     if (Core.RenderMode == 2)
                     {
                         CurrentDisplay.Update();
