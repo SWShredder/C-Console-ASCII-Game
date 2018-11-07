@@ -11,8 +11,6 @@ namespace AsciiEngine
     public class Core
     {
 
-
-
         public static string[] DefaultGraphics =
         {
             " ",
@@ -33,10 +31,6 @@ namespace AsciiEngine
             "  5AAAAAAA"
         };
 
-
-
-
-
         public static ConsoleColor[,] PlayerGraphicColorMatrix = {
             { Gray, Blue, DarkRed , DarkRed, DarkRed, Blue, Gray },
             { Gray, Blue, Blue, Blue, Blue, Blue, Gray },
@@ -45,11 +39,6 @@ namespace AsciiEngine
             { Gray, Gray, Blue, Blue, DarkRed, Gray, Gray }
         };
 
-
-
-
-
-
         // Generates temp files.
         public static int RenderMode = 2;
         public static Vector2 ScreenSize = new Vector2((int)(Console.LargestWindowWidth / 1.5), (int)(Console.LargestWindowHeight / 1.5));
@@ -57,12 +46,10 @@ namespace AsciiEngine
         public static Camera Camera = new Camera();
         public static Core Engine = new Core();
         public static Systems.Display Display = new Systems.Display();
-        public static Systems.ScreenRenderer ScreenRenderer = new Systems.ScreenRenderer();
+        //public static Systems.ScreenRenderer ScreenRenderer = new Systems.ScreenRenderer();
+        public static Renderer Renderer = new Renderer();
         public static bool GameExit = false;
         public Player player;
-
-
-
 
         void GameInit()
         {
@@ -71,13 +58,12 @@ namespace AsciiEngine
             Console.CursorVisible = false;
             Camera.FitScreenSize();
 
-            player = new Player(PlayerGraphic, PlayerGraphicColorMatrix) { Position = new Vector2(10,10) };
+            player = new Player(PlayerGraphic, PlayerGraphicColorMatrix) { Position = new Vector2(0, 0) };
             Camera.SetFocus(player);
-
-            PopulateAsteroid(new Vector2(20, 20));
-            PopulateAsteroid(new Vector2(150, 30));
-            PopulateAsteroid(new Vector2(35, 50));        
-      
+            //PopulateAsteroid(new Vector2(20, 20));
+            //PopulateAsteroid(new Vector2(150, 30));
+            //PopulateAsteroid(new Vector2(35, 50));
+            PopulateAsteroids(200);
         }
 
 
@@ -104,7 +90,15 @@ namespace AsciiEngine
         }
 
 
-
+        public void PopulateAsteroids(int amountAsteroids)
+        {
+            Random random = new Random();
+            GameObject[] asteroids = new GameObject[amountAsteroids];
+            foreach(GameObject gameObject in asteroids)
+            {
+                PopulateAsteroid(new Vector2(random.Next(5, 380), random.Next(5, 380)));
+            }
+        }
 
         void PopulateAsteroid(Vector2 position)
         {

@@ -30,133 +30,16 @@ namespace AsciiEngine
 
                 // Color Mode with render from layer and backbuffer.
 
-                ScreenRenderer.Instance.ScreenBuffer.Draw();
-
+                //ScreenRenderer.Instance.ScreenBuffer.Draw();
+                Renderer.Instance.ScreenBuffer.Draw();
             }
 
-
-
-            public void DrawNoColor(object frame, bool isLayer = false)
-            {
-                Vector2 framePosition = (frame as IPosition) != null ? (frame as IPosition).Position : Vec2(0, 0);
-                Vector2 frameSize = (frame as ISize) != null ? (frame as ISize).Size : Vec2(0, 0);
-                Sprite frameSprite = (frame as IGraphics) != null ? (frame as IGraphics).Graphics : (Sprite)frame;
-
-                string[] screenBuffer = new string[frameSize.Y];
-
-                for (int y = 0; y < frameSize.Y; y++)
-                {
-                    string bufferLine = "";
-                    for (int x = 0; x < frameSize.X; x++)
-                    {
-                        if (frameSprite[x, y].Color == ConsoleColor.Gray || isLayer == false)
-                            bufferLine += frameSprite[x, y].Char;
-                        else
-                            bufferLine += " ";
-                    }
-                    screenBuffer[y] = bufferLine;
-                }
-                Console.SetCursorPosition(0, 0);
-                foreach (string line in screenBuffer)
-                {
-                    Console.WriteLine(line);
-                }
-            }
-
-
-
-            public void Draw(object frame)
-            {
-                Vector2 objPosition = (frame as IPosition) != null ? (frame as IPosition).Position : Vec2(0, 0);
-                Vector2 objSize = (frame as ISize) != null ? (frame as ISize).Size : Vec2(0, 0);
-                Sprite objSprite = (frame as IGraphics) != null ? (frame as IGraphics).Graphics : (Sprite)frame;
-
-                Vector2 CameraPosition = Core.Camera.Position;
-                Vector2 CameraSize = Core.Camera.Size;
-                Vector2 objScreenPosition = objPosition - CameraPosition;
-
-                if ((objScreenPosition + objSize).X < 0 || (objScreenPosition + objSize).Y < 0)
-                    return;
-                if ((objScreenPosition).X > CameraSize.X || (objScreenPosition).Y > CameraSize.Y)
-                    return;
-
-
-                for (int y = 0; y < objSize.Y; y++)
-                {
-                    for (int x = 0; x < objSize.X; x++)
-                    {
-                        if (objSprite[x, y].Color != ConsoleColor.Gray)
-                        {
-                            Console.ForegroundColor = (objSprite[x, y]).Color;
-                            Console.SetCursorPosition(x + objScreenPosition.X, y + objScreenPosition.Y);
-                            Console.Write(objSprite[x, y].Char);
-                            Console.ResetColor();
-                        }
-                        else
-                        {
-                            Console.ForegroundColor = (objSprite[x, y]).Color;
-                            Console.SetCursorPosition(x + objScreenPosition.X, y + objScreenPosition.Y);
-                            Console.Write(objSprite[x, y].Char);
-                            Console.ResetColor();
-                        }
-                    }
-                }
-            }
-
-            public void Erase(object frame)
-            {
-                Vector2 objPosition = (frame as IPosition) != null ? (frame as IPosition).Position : Vec2(0, 0);
-                Vector2 objSize = (frame as ISize) != null ? (frame as ISize).Size : Vec2(0, 0);
-                Sprite objSprite = (frame as IGraphics) != null ? (frame as IGraphics).Graphics : (Sprite)frame;
-
-                Vector2 CameraPosition = Core.Camera.Position;
-                Vector2 CameraSize = Core.Camera.Size;
-                Vector2 objScreenPosition = objPosition - CameraPosition;
-
-                if ((objScreenPosition + objSize).X < 0 || (objScreenPosition + objSize).Y < 0)
-                    return;
-                if ((objScreenPosition).X > CameraSize.X || (objScreenPosition).Y > CameraSize.Y)
-                    return;
-
-                for (int y = 0; y < objSize.Y; y++)
-                {
-                    for (int x = 0; x < objSize.X; x++)
-                    {
-                        if (objSprite[x, y].Char != ' ')
-                        {
-                            Console.SetCursorPosition(x + objScreenPosition.X, y + objScreenPosition.Y);
-                            Console.Write(' ');
-                        }
-                    }
-                }
-            }
-
-
-            public void DrawColorLayer(object frame)
-            {
-                Vector2 objPosition = (frame as IPosition) != null ? (frame as IPosition).Position : Vec2(0, 0);
-                Vector2 objSize = (frame as ISize) != null ? (frame as ISize).Size : Vec2(0, 0);
-                Sprite objSprite = (frame as IGraphics) != null ? (frame as IGraphics).Graphics : (Sprite)frame;
-
-                for (int y = 0; y < objSize.Y; y++)
-                {
-                    for (int x = 0; x < objSize.X; x++)
-                    {
-                        if (objSprite[x, y].Color != ConsoleColor.Gray)
-                        {
-                            Console.ForegroundColor = objSprite[x, y].Color;
-                            Console.SetCursorPosition(x, y);
-                            Console.Write(objSprite[x, y].Char);
-                            Console.ResetColor();
-                        }
-                    }
-                }
-            }
+            
 
         }
 
 
-
+        /*
         public class ScreenRenderer
         {
 
@@ -182,14 +65,13 @@ namespace AsciiEngine
             public ScreenRenderer()
             {
                 Instance = this;
-                DrawRequests = new List<DrawRequestEventArgs>();
 
             }
 
             public void OnDrawRequest(object source, DrawRequestEventArgs args)
             {
                 //DrawRequests.Add(args);
-                if (Core.RenderMode >= 2)
+               // if (Core.RenderMode >= 2)
                     RenderRequest(source, args);
             }
 
@@ -276,12 +158,7 @@ namespace AsciiEngine
                             Console.Write(sprite[x, y].Char);
                             Console.ForegroundColor = ConsoleColor.Gray;*/
 
-
-                        }
-                    }
-                }
-            }
-        }
+        
 
 
         public static class Update
@@ -296,23 +173,20 @@ namespace AsciiEngine
             public static void Process(DateTime time)
             {
                 // There are 10000 ticks in a millisecond.
-                if ((time.Ticks - updateTicks) / 10000.0 >= 15.0)
+                if ((time.Ticks - updateTicks) / 10000.0 >= 10.0)
                 {
                     // Handles the update of the ticks and time data for the game systems.
                     DeltaTime = (time.Ticks - updateTicks) / 10000.0;
-
-
-
-
                     updateTicks = time.Ticks;
-
                     //Propagate the Update pulse among the registered objects
                     foreach (object obj in Registry)
                     {
                         UpdateComponents(obj as IUpdate);
                     }
                     if (Core.RenderMode == 2)
-                        ScreenRenderer.Instance.Update();
+                    {
+                        //ScreenRenderer.Instance.Update();
+                    }
                     else if (Core.RenderMode <= 1)
                         CurrentDisplay.Update();
 

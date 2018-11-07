@@ -7,12 +7,12 @@ using static AsciiEngine.Utility;
 
 namespace AsciiEngine
 {
-
+    /// <summary>
+    /// Handles the camera and determines what is seen by the user. The camera follows a GameObject around
+    /// and is used by the rendering engine to know what to output to the screen.
+    /// </summary>
     public class Camera : IPosition, ISize
     {
-        static public Camera Instance;
-        const int SizeOffsetX = 0;
-        const int SizeOffsetY = 2;
         /// <summary>
         /// Signal that is sent to all observers on update from the camera's coordinates.
         /// </summary>
@@ -24,10 +24,15 @@ namespace AsciiEngine
         /// </summary>
         public event CameraPositionChangeEventHandler CameraPositionChanged;
 
+        // FIELDS //
+        static public Camera Instance; 
+        const int SizeOffsetX = 0;
+        const int SizeOffsetY = 2;
         private Vector2 position;
         private GameObject objectFocused;
         private Vector2 size;
 
+        // PROPERTIES //
         public Vector2 Offset => Vec2(size.X / 2, size.Y / 2);
         public GameObject ObjectFocused
         {
@@ -54,7 +59,7 @@ namespace AsciiEngine
                     return;
 
                 position = value;
-                OnCameraPositionChanged(oldPosition, position, Size);
+                //OnCameraPositionChanged(oldPosition, position, Size);
             }
             get
             {

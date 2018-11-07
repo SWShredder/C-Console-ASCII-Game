@@ -7,7 +7,9 @@ namespace AsciiEngine
 {
     public class Physics
     {
-        
+        public static double Scale = 5.0;
+        public static int Drag = 12;
+
         public class Space
         {
             public GameObject[,] SpaceArray;
@@ -31,7 +33,7 @@ namespace AsciiEngine
                 if (gameObjMatrix == null)
                     return;
 
-                ClearPositionMatrix(gameObjMatrix, gameObjPosition, gameObject.Graphics);
+                ClearPositionMatrix(gameObjMatrix, gameObjPosition, gameObject.SpriteGraphics);
                 UpdateSpacePosition(gameObject, newPosition, gameObjMatrix);
                 /*
                 if (gameObject.Body == null)
@@ -68,7 +70,7 @@ namespace AsciiEngine
                 {
                     for (int y = 0; y < newPosMatrix.Size.Y; y++)
                     {
-                        if(gameObject.Graphics[x , y].Char != ' ')
+                        if(gameObject.SpriteGraphics[x , y].Char != ' ')
                             SpaceArray[newPosMatrix[x, y].X, newPosMatrix[x, y].Y] = gameObject;
                     }
                 }
@@ -130,6 +132,7 @@ namespace AsciiEngine
             }
         }
     }
+    /*
     public class PhysicsBody2 : ISize
     {
         public bool IsSolid = true;
@@ -163,7 +166,7 @@ namespace AsciiEngine
             return points;
         }
         public bool this[int x, int y] => CollisionPoints[x, y];
-    }
+    }*/
 
     
 }

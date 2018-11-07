@@ -252,7 +252,7 @@ namespace AsciiEngine
             {
                 if (currentFrame == null)
                 {
-                    currentFrame = new Frame((parent as GameObject).Graphics);
+                    currentFrame = new Frame((parent as GameObject).SpriteGraphics);
 
                 }
                 return currentFrame;
@@ -282,7 +282,7 @@ namespace AsciiEngine
             // Signal registry for Camera
             Camera.Instance.CameraPositionChanged += OnCameraPositionChanged;
             // Signal registry for ScreenRenderer
-            DrawRequest += Core.ScreenRenderer.OnDrawRequest;
+           //DrawRequest += Core.ScreenRenderer.OnDrawRequest;
             // Signal registry with Parent
             (parent as GameObject).ObjectPositionChanged += OnParentObjectPositionChanged;
 

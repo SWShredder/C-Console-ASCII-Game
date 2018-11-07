@@ -44,6 +44,7 @@ namespace AsciiEngine
     {
         private int x;
         private int y;
+ 
         
 
         public Vector2(int c_x, int c_y)
@@ -116,6 +117,8 @@ namespace AsciiEngine
         {
             return vecA.X > vecB.X && vecA.Y > vecB.Y;
         }
+
+
 
     }
     public class Matrix : ISize
@@ -229,12 +232,16 @@ namespace AsciiEngine
     }
     interface IGraphics
     {
-        Sprite Graphics { set;  get; }
+        Graphics Graphics { get; }
     }
     interface IInput
     {
         void Input(System.Windows.Input.Keyboard keyboard);
     }
+    interface ISprite
+    {
+        Sprite SpriteGraphics { get; }
 
+    }
 
 }

@@ -1,50 +1,69 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Input;
-
 namespace AsciiEngine
 {
-    public class GameObject : IPosition, IEnumerable<GameObject>, IMove, ISize, IPositionMatrix, IGraphics, IUpdate
+    /// <summary>
+    /// The class represents all object that inhabits the game space including entities, the player, projectiles, etc.
+    /// </summary>
+    public class GameObject : IPosition, IEnumerable<GameObject>, IMove, ISize, IPositionMatrix, IGraphics, IUpdate, ISprite
     {
+        /// <summary>
+        /// The event handler of the GameObject class to raise events when the GameObject changes position.
+        /// </summary>
+        /// <param name="source">A generic object instance that will be used by the observer</param>
+        /// <param name="args">Args contain the vector2 values of the old position and the new position of the GameObject's instance</param>
         public delegate void ObjectPositionChangeEventHandler(object source, ObjectPositionEventArgs args);
         public event ObjectPositionChangeEventHandler ObjectPositionChanged;
 
-        // Static list of GameObjects
-        static public List<GameObject> GameObjectList = new List<GameObject>();
+        /// <summary>
+        /// A list of all GameObject instances. Every GameObject instances registers to the list at creation
+        /// </summary>
+        static public List<GameObject> List = new List<GameObject>();
 
-        private Graphics GraphicSet;
-        private Sprite graphics;
+        // FIELDS//
+        private Graphics graphics;
+        private Sprite spriteGraphics;
+        private Vector2 position;
+
+        // PROPERTIES //
+        public PhysicsBody2 PhysicsBody2 { set; get; }
+        /// <summary>
+        /// Returns a Position Matrix constructed from this instance's size and position
+        /// </summary>
         public PositionMatrix PositionMatrix => new PositionMatrix(this.Size, this.Position);
-        public Sprite Graphics
+        /// <summary>
+        /// Returns GameObject's instance's Sprite and if null, returns a DefaultGraphics.
+        /// </summary>
+        public Sprite SpriteGraphics
         {
             get
             {
-                if (graphics == null)
-                    graphics = new Sprite(Core.DefaultGraphics);
-                return graphics;
+                if (spriteGraphics == null)
+                    spriteGraphics = new Sprite(Core.DefaultGraphics);
+                return spriteGraphics;
             }
             set
             {
-                graphics = value;
+                spriteGraphics = value;
             }
         }
-
-        public PhysicsBody2 PhysicsBody2;
-        private Vector2 position;
+        /// <summary>
+        /// Returns the size of GameObject's instance's SpriteGraphics size.
+        /// </summary>
         public Vector2 Size
         {
             get
             {
-                return this.Graphics.Size;
+                return this.SpriteGraphics.Size;
             }
         }
-
         ////// NEEDS TO BE REWORKED /////
-
+        /// <summary>
+        /// (WIP) When Position is set, the values that depend on GameObject's instance's position are updated
+        /// at the same time. If no position exists and the engine needs to check the instance's position it is assumed
+        /// to be (0,0)
+        /// </summary>
         public Vector2 Position
         {
             set
@@ -53,20 +72,58 @@ namespace AsciiEngine
                 //this.Body.SetPos(value);
                 Vector2 oldPosition = position;                
                 this.position = value;
-                /*if(Camera.ActiveCamera != null)
-                    Camera.ActiveCamera.CameraUpdateForObject(value);*/
-                Camera.Instance.NotifyCameraPositionChange(this, value);
+                if(this == Camera.Instance.ObjectFocused)
+                    Camera.Instance.NotifyCameraPositionChange(this, value);
                 OnObjectPositionChanged(oldPosition, value);
             }
             get
             {
                 if (position == null)
-                    position = new Vector2(10, 10);
+                    position = new Vector2(0, 0);
                 return position;
             }
 
         }
+        public Graphics Graphics => graphics;
 
+        /// METHODS ////
+        /// <summary>
+        /// (WIP)The common initialize method to all constructors. It adds a Graphics to all object created, adds the instance to
+        /// the list and registers for update.
+        /// </summary>
+        private void Initialize()
+        {
+            graphics = new Graphics(this);
+            List.Add(this);
+            Systems.Update.Register(this);
+        }
+        /// <summary>
+        /// (WIP) Basic constructor with no color matrix. Adds a physicsBody2 to the instance.
+        /// </summary>
+        /// <param name="graphics">Represents a Sprite graphics assigned to a GameObject's instance</param>
+        public GameObject(string[] graphics)
+        {
+            Initialize();
+            SpriteGraphics = new Sprite(graphics);
+            PhysicsBody2 = new PhysicsBody2(SpriteGraphics);
+        }
+        /// <summary>
+        /// (WIP) Overdriven constructor to handle color matrixes.
+        /// </summary>
+        /// <param name="graphics">Represents a Sprite graphics assigned to GameObject's instance</param>
+        /// <param name="colorMatrix">Represents the color Matric assigned </param>
+        public GameObject(string[] graphics, ConsoleColor[,] colorMatrix)
+        {
+            Initialize();
+            SpriteGraphics = new Sprite(graphics, colorMatrix);
+            PhysicsBody2 = new PhysicsBody2(SpriteGraphics);
+        }
+        /// <summary>
+        /// The method raises an event when the GameObject's position is changed. The event is sent to all
+        /// connected modules that belong to GameObject.
+        /// </summary>
+        /// <param name="oldPosition">A vector2 that represents the old position of the GameObject before the position was updated</param>
+        /// <param name="newPosition">A vector2 that represents the new position after the GameObject's position was updated</param>
         protected virtual void OnObjectPositionChanged(Vector2 oldPosition, Vector2 newPosition)
         {
             ObjectPositionChanged?.Invoke(this, new ObjectPositionEventArgs()
@@ -75,46 +132,19 @@ namespace AsciiEngine
                 NewPosition = newPosition,
             });
         }
-
-
+        /// <summary>
+        /// (UNUSED) Updates the block inside Update() every game updates.
+        /// </summary>
         public virtual void Update()
         {
 
         }
-
-
-
-
-        // Class constructor adds GameObject to the static list.
-        private void Initialize()
-        {
-            GraphicSet = new Graphics(this);
-            GameObjectList.Add(this);
-            Systems.Update.Register(this);
-        }
-
-        public GameObject(string[] graphics)
-        {
-            Initialize();
-            Graphics = new Sprite(graphics);
-            PhysicsBody2 = new PhysicsBody2(Graphics);
-        }
-        public GameObject(string[] graphics, ConsoleColor[,] colorMatrix)
-        {
-            Initialize();
-            Graphics = new Sprite(graphics, colorMatrix);
-            PhysicsBody2 = new PhysicsBody2(Graphics);
-        }
-
-
-
-
         // The code to make GameObject Enumeratable.
         public IEnumerator<GameObject> GetEnumerator()
         {
-            for (int i = 0; i < GameObjectList.Count; i++)
+            for (int i = 0; i < List.Count; i++)
             {
-                yield return GameObjectList[i];
+                yield return List[i];
             }
         }
         // Explicit interface implementation for nongeneric interface
@@ -122,139 +152,7 @@ namespace AsciiEngine
         {
             return GetEnumerator();
         }
-        // Methods
-
-
-
-
 
     }
-    public class Entity : GameObject
-    {
-        /* CODE NEEDS TO BE HEAVILY REWRITTEN */
-        // STATIC //
-        static private int entityRegistered = 0;
-        static public List<Entity> EntityList = new List<Entity>();
-
-        //private string[] graphic;
-        //public PhysicsBody Body;
-        private int entityId;
-
-
-        public Entity(string[] p_graphic) : base(p_graphic)
-        {
-            entityRegistered++;
-            this.entityId = entityRegistered;
-            EntityList.Add(this);
-        }
-        public Entity(string[] p_graphic, ConsoleColor[,] colorMatrix) : base(p_graphic, colorMatrix)
-        {
-            entityRegistered++;
-            this.entityId = entityRegistered;
-            EntityList.Add(this);
-        }
-
-        public bool FindFromId(int id, out Entity entity_found)
-        {
-            foreach (Entity entity in EntityList)
-            {
-                if (entity.GetId() == id)
-                {
-                    entity_found = entity;
-                    return true;
-                }
-
-            }
-            entity_found = null;
-            return false;
-        }
-        public int GetId()
-        {
-            return this.entityId;
-        }
-
-        public bool CheckCollision(Vector2 movement)
-        {
-            Vector2 direction = movement + this.Position;
-            if (direction.X < 0 || direction.Y < 0)
-                return true;
-            return Core.Map.CollisionCheck(this, direction);
-        }
-
-    }
-    public class Player : Entity, IUpdate
-    {
-        private double deltaTime;
-        private double localTicks = 0;
-        private double moveSpeed = 80.0;
-
-
-        public Player() : base(Core.PlayerGraphic)
-        {
-            Systems.Update.Register(this);
-            localTicks = 0;
-        }
-
-        public Player(string[] graphic, ConsoleColor[,] colorMatrix) : base(graphic, colorMatrix)
-        {
-            Systems.Update.Register(this);
-            localTicks = 0;
-        }
-        // Update method is used to update ticks for the Player.
-        public new void Update()
-        {
-
-            // The amount of ticks between update cycles.
-            deltaTime = Systems.Update.DeltaTime;
-            // amount of ticks since last movement.
-            localTicks += deltaTime;
-            ProcessInput();
-        }
-
-        public void ProcessInput()
-        {
-            if (System.Windows.Input.Keyboard.IsKeyDown(Key.Down))
-            {
-                Move(new Vector2(0, 1));
-            }
-            if (System.Windows.Input.Keyboard.IsKeyDown(Key.Up))
-            {
-                Move(new Vector2(0, -1));
-            }
-            if (System.Windows.Input.Keyboard.IsKeyDown(Key.Left))
-            {
-                Move(new Vector2(-1, 0));
-            }
-            if (System.Windows.Input.Keyboard.IsKeyDown(Key.Right))
-            {
-                Move(new Vector2(1, 0));
-            }
-            if (System.Windows.Input.Keyboard.IsKeyDown(Key.Z))
-            {
-
-            }
-            if (System.Windows.Input.Keyboard.IsKeyDown(Key.Escape))
-            {
-                Core.GameExit = true;
-            }
-        }
-
-        public void Move(Vector2 coords)
-        {
-            // Handles player movespeed.(Needs to be improved and decoupled)
-            if (localTicks < moveSpeed)
-                return;
-            // Handles Collisions. Will not move if CheckCollision == true.
-            if (this.CheckCollision(coords))
-                return;
-            // Handles Out of Bound error if player gets to edge of Space. Could be Refactored.
-            if ((this.Position + coords).X > Core.Map.Size.X || (this.Position + coords).Y > Core.Map.Size.Y)
-                return;
-            if ((Position + coords).X < 0 || (Position + coords).Y < 0)
-                return;
-            // Amount of ticks is reset after movement until next move.
-            localTicks = 0;
-            this.Position += coords;
-        }
-    }
+ 
 }
