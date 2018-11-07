@@ -79,7 +79,7 @@ namespace AsciiEngine
             localTicks = 0;
         }
         // Update method is used to update ticks for the Player.
-        public new void Update()
+        public void Update()
         {
 
             // The amount of ticks between update cycles.

@@ -28,7 +28,7 @@ namespace AsciiEngine
             }
             public void OnPositionUpdate(GameObject gameObject, Vector2 newPosition)
             {
-                IPositionMatrix gameObjMatrix = gameObject as IPositionMatrix;
+                var gameObjMatrix = gameObject as IPositionMatrix;
                 IPosition gameObjPosition = gameObject as IPosition;
                 if (gameObjMatrix == null)
                     return;

@@ -6,7 +6,7 @@ namespace AsciiEngine
     /// <summary>
     /// The class represents all object that inhabits the game space including entities, the player, projectiles, etc.
     /// </summary>
-    public class GameObject : IPosition, IEnumerable<GameObject>, IMove, ISize, IPositionMatrix, IGraphics, IUpdate, ISprite
+    public class GameObject : IPosition, IEnumerable<GameObject>, IMove, ISize, IPositionMatrix, IGraphics, ISprite
     {
         /// <summary>
         /// The event handler of the GameObject class to raise events when the GameObject changes position.
@@ -135,10 +135,7 @@ namespace AsciiEngine
         /// <summary>
         /// (UNUSED) Updates the block inside Update() every game updates.
         /// </summary>
-        public virtual void Update()
-        {
 
-        }
         // The code to make GameObject Enumeratable.
         public IEnumerator<GameObject> GetEnumerator()
         {
