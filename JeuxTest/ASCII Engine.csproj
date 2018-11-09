@@ -61,13 +61,15 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Camera.cs" />
-    <Compile Include="Node.cs" />
+    <Compile Include="Canvas.cs" />
+    <Compile Include="PhysicsSpace.cs" />
     <Compile Include="Interfaces.cs" />
     <Compile Include="Renderer.cs" />
     <Compile Include="PhysicsBody.cs" />
     <Compile Include="Entity.cs" />
     <Compile Include="ScreenBuffer.cs" />
     <Compile Include="Graphics.cs" />
+    <Compile Include="Sprite.cs" />
     <Compile Include="Utility.cs" />
     <Compile Include="Systems.cs" />
     <Compile Include="GameObject.cs" />

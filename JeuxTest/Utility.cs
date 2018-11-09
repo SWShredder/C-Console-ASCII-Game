@@ -40,12 +40,68 @@ namespace AsciiEngine
         }
 
     }
+
+    public class Tile
+    {
+        private ConsoleColor color;
+        private Char _Char;
+        // Properties are Color and Char
+        public ConsoleColor Color
+        {
+            get
+            {
+                return color;
+            }
+            set
+            {
+                color = value;
+            }
+        }
+        public char Char
+        {
+            private set
+            {
+                _Char = value;
+            }
+            get
+            {
+                return _Char;
+            }
+        }
+        // Basic constructor.
+        public Tile(char _char, ConsoleColor _color)
+        {
+            Char = _char;
+            Color = _color;
+        }
+        public Tile(char _char)
+        {
+            Char = _char;
+            Color = ConsoleColor.Gray;
+        }
+        public override string ToString()
+        {
+            return String.Format("'{0}':{1}", Char, Color);
+        }
+    }
+
     public class Vector2
     {
         private int x;
         private int y;
- 
-        
+
+        public override bool Equals(object obj)
+        {
+            Vector2 vec = (Vector2)obj;
+            if (obj == null)
+                return false;
+            return this.X == vec.X && this.Y == vec.Y;
+        }
+
+        public override int GetHashCode()
+        {
+            return this.X.GetHashCode() * 17 + this.Y.GetHashCode();
+        }
 
         public Vector2(int c_x, int c_y)
         {

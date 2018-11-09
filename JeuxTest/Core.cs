@@ -24,11 +24,11 @@ namespace AsciiEngine
             " xXXXx ",
         };
         public static string[] AsteroidGraphic = {
-            "  1AAAAA  ",
-            " 2AAAAAAAA",
-            " 3AAAAAAAA",
-            "4AAAAAAAA ",
-            "  5AAAAAAA"
+            "  AAAAAA  ",
+            " AAAAAAAAA",
+            " AAAAAAAAA",
+            "AAAAAAAAA ",
+            "  AAAAAAAA"
         };
 
         public static ConsoleColor[,] PlayerGraphicColorMatrix = {
@@ -49,6 +49,9 @@ namespace AsciiEngine
         //public static Systems.ScreenRenderer ScreenRenderer = new Systems.ScreenRenderer();
         public static Renderer Renderer = new Renderer();
         public static bool GameExit = false;
+
+        public Vector2 RenderingSize = new Vector2(Console.LargestWindowWidth, Console.LargestWindowHeight);
+        public PhysicsSpace PhysicsSpace = new PhysicsSpace();
         public Player player;
 
         void GameInit()
@@ -56,7 +59,11 @@ namespace AsciiEngine
             Console.SetBufferSize((int)(Console.LargestWindowWidth), (int)(Console.LargestWindowHeight));
             Console.SetWindowSize(ScreenSize.X, ScreenSize.Y);
             Console.CursorVisible = false;
+
+
+
             Camera.FitScreenSize();
+
 
             player = new Player(PlayerGraphic, PlayerGraphicColorMatrix) { Position = new Vector2(0, 0) };
             Camera.SetFocus(player);

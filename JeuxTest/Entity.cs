@@ -56,7 +56,8 @@ namespace AsciiEngine
             Vector2 direction = movement + this.Position;
             if (direction.X < 0 || direction.Y < 0)
                 return true;
-            return Core.Map.CollisionCheck(this, direction);
+            //return Core.Map.CollisionCheck(this, direction);
+            return Core.Engine.PhysicsSpace.CheckCollision(this, direction);
         }
 
     }

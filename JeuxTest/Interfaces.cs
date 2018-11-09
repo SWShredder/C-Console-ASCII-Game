@@ -7,6 +7,14 @@ using System.Threading.Tasks;
 namespace AsciiEngine
 {
     // INTERFACES
+    interface ITransform : IRotation, IPosition, ISize
+    {
+
+    }
+    interface IRotation
+    {
+        int Rotation { set; get; }
+    }
 
     interface IUpdate
     {
@@ -21,9 +29,9 @@ namespace AsciiEngine
         Vector2 Size { get; }
     }
 
-    interface ICollision
+    interface IPhysics
     {
-        PhysicsBody2 CollisionBody { set; get; }
+        PhysicsBody2 PhysicsBody { get; }
     }
     interface IMove
     {

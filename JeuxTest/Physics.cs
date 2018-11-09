@@ -106,7 +106,7 @@ namespace AsciiEngine
 
             public bool CollisionCheck(GameObject initiatorObject, Vector2 position)
             {
-                PhysicsBody2 body = initiatorObject.PhysicsBody2;
+                PhysicsBody2 body = initiatorObject.PhysicsBody;
                 for(int y = 0; y < body.Size.Y; y++)
                 {
                     for(int x = 0; x < body.Size.X; x++)
@@ -114,7 +114,7 @@ namespace AsciiEngine
                         if(this.SpaceArray[x + position.X , y + position.Y] != null)
                         {
                             GameObject gameObject = this.SpaceArray[x + position.X, y + position.Y];
-                            if(gameObject.PhysicsBody2 == body)
+                            if(gameObject.PhysicsBody == body)
                             {
                                 continue;
                             }
@@ -123,7 +123,7 @@ namespace AsciiEngine
                             Vector2 selfPosition = pointPosition - position;
                             /*if (gameObject.PhysicsBody2.Size.X <= targetPosition.X || gameObject.PhysicsBody2.Size.Y <= targetPosition.Y)
                                 continue;*/
-                            if (gameObject.PhysicsBody2[targetPosition.X, targetPosition.Y] && body[selfPosition.X, selfPosition.Y])
+                            if (gameObject.PhysicsBody[targetPosition.X, targetPosition.Y] && body[selfPosition.X, selfPosition.Y])
                                 return true;
                         }
                     }

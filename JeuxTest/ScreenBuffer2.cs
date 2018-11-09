@@ -23,11 +23,11 @@ namespace AsciiEngine
 
         // PROPERTIES //
         /// <summary>
-        /// canvas is used by the engine and ScreenBuffer's method canvasToBuffer to render the backbuffer
+        /// Sprite is used by the engine and ScreenBuffer's method SpriteToBuffer to render the backbuffer
         /// </summary>
-        public Canvas Canvas
+        public Sprite Sprite
         {
-            set => buffer = CanvasToBuffer(value);
+            set => buffer = SpriteToBuffer(value);
         }
         /// <summary>
         /// Position is used to determine the render area's position on the screen. Never returns null since
@@ -98,22 +98,22 @@ namespace AsciiEngine
 
         /// <summary>
         /// Returns an array of charInfo that is used by the WriteConsoleOutput to render the buffer. CharInfo
-        /// is the same as a Tile in canvas.
+        /// is the same as a Tile in Sprite.
         /// </summary>
-        /// <param name="canvas">The canvas represents the object from which the CharInfo will be extracted</param>
+        /// <param name="sprite">The sprite represents the object from which the CharInfo will be extracted</param>
         /// <returns></returns>
-        private CharInfo[] CanvasToBuffer(Canvas canvas)
+        private CharInfo[] SpriteToBuffer(Sprite sprite)
         {
-            CharInfo[] newBuffer = new CharInfo[canvas.Size.Y * canvas.Size.X];
-            if (canvas == null)
+            CharInfo[] newBuffer = new CharInfo[sprite.Size.Y * sprite.Size.X];
+            if (sprite == null)
                 return newBuffer;
 
-            for (int y = 0; y < canvas.Size.Y; ++y)
+            for (int y = 0; y < sprite.Size.Y; ++y)
             {
-                for (int x = 0; x < canvas.Size.X; ++x)
+                for (int x = 0; x < sprite.Size.X; ++x)
                 {
-                    newBuffer[(y * canvas.Size.X) + x].Char.UnicodeChar = canvas[x, y].Char;
-                    newBuffer[(y * canvas.Size.X) + x].Attributes = (short)canvas[x, y].Color;
+                    newBuffer[(y * sprite.Size.X) + x].Char.UnicodeChar = sprite[x, y].Char;
+                    newBuffer[(y * sprite.Size.X) + x].Attributes = (short)sprite[x, y].Color;
                 }
             }
             return newBuffer;

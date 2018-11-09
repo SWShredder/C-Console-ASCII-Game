@@ -6,7 +6,7 @@ namespace AsciiEngine
     /// <summary>
     /// The class represents all object that inhabits the game space including entities, the player, projectiles, etc.
     /// </summary>
-    public class GameObject : IPosition, IEnumerable<GameObject>, IMove, ISize, IPositionMatrix, IGraphics, ISprite
+    public class GameObject : IPosition, IEnumerable<GameObject>, IMove, ISize, IPositionMatrix, IGraphics, ISprite, IPhysics
     {
         /// <summary>
         /// The event handler of the GameObject class to raise events when the GameObject changes position.
@@ -27,7 +27,7 @@ namespace AsciiEngine
         private Vector2 position;
 
         // PROPERTIES //
-        public PhysicsBody2 PhysicsBody2 { set; get; }
+        public PhysicsBody2 PhysicsBody { set; get; }
         /// <summary>
         /// Returns a Position Matrix constructed from this instance's size and position
         /// </summary>
@@ -69,7 +69,6 @@ namespace AsciiEngine
             set
             {
                 Core.Map.OnPositionUpdate(this, value);
-                //this.Body.SetPos(value);
                 Vector2 oldPosition = position;                
                 this.position = value;
                 if(this == Camera.Instance.ObjectFocused)
@@ -105,7 +104,7 @@ namespace AsciiEngine
         {
             Initialize();
             SpriteGraphics = new Sprite(graphics);
-            PhysicsBody2 = new PhysicsBody2(SpriteGraphics);
+            PhysicsBody = new PhysicsBody2(SpriteGraphics);
         }
         /// <summary>
         /// (WIP) Overdriven constructor to handle color matrixes.
@@ -116,7 +115,7 @@ namespace AsciiEngine
         {
             Initialize();
             SpriteGraphics = new Sprite(graphics, colorMatrix);
-            PhysicsBody2 = new PhysicsBody2(SpriteGraphics);
+            PhysicsBody = new PhysicsBody2(SpriteGraphics);
         }
         /// <summary>
         /// The method raises an event when the GameObject's position is changed. The event is sent to all

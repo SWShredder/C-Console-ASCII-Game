@@ -12,12 +12,12 @@ namespace AsciiEngine
         private static Renderer instance;
         public static Renderer Instance => instance;
 
-        public Frame Frame => RenderFrame(Core.Map, Camera.Instance);
+        public Canvas Canvas => RenderCanvas(Core.Map, Camera.Instance);
         public ScreenBuffer ScreenBuffer
         {
             get
             {
-                return new ScreenBuffer() { Size = Camera.Instance.Size, Sprite = Frame.Sprite };
+                return new ScreenBuffer() { Size = Camera.Instance.Size, Canvas = this.Canvas };
             }
         }
 
@@ -31,9 +31,9 @@ namespace AsciiEngine
             instance = this;
         }
 
-        private Frame RenderFrame(Physics.Space space, Camera camera)
+        private Canvas RenderCanvas(Physics.Space space, Camera camera)
         {
-            Frame newFrame = new Frame() { Size = camera.Size };
+            Canvas newCanvas = new Canvas(camera.Size);
             Vector2 index = new Vector2(0, 0);
 
             for (int y = camera.Position.Y; y < camera.Position.Y + camera.Size.Y; y++)
@@ -50,14 +50,14 @@ namespace AsciiEngine
                         if (relativePosition.X < objectSprite.Size.X
                             && relativePosition.Y < objectSprite.Size.Y)
                         {
-                            newFrame.Sprite[index.X, index.Y] = objectSprite[relativePosition.X, relativePosition.Y];
+                            newCanvas[index.X, index.Y] = objectSprite[relativePosition.X, relativePosition.Y];
                         }                      
                     }
                     index.X++;
                 }
                 index.Y++;
             }
-            return newFrame;
+            return newCanvas;
         }
     }
 }
