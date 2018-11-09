@@ -54,8 +54,8 @@ namespace AsciiEngine
         public bool CheckCollision(Vector2 movement)
         {
             Vector2 direction = movement + this.Position;
-            if (direction.X < 0 || direction.Y < 0)
-                return true;
+            /*if (direction.X < 0 || direction.Y < 0)
+                return true;*/
             //return Core.Map.CollisionCheck(this, direction);
             return Core.Engine.PhysicsSpace.CheckCollision(this, direction);
         }
@@ -127,10 +127,6 @@ namespace AsciiEngine
             if (this.CheckCollision(coords))
                 return;
             // Handles Out of Bound error if player gets to edge of Space. Could be Refactored.
-            if ((this.Position + coords).X > Core.Map.Size.X || (this.Position + coords).Y > Core.Map.Size.Y)
-                return;
-            if ((Position + coords).X < 0 || (Position + coords).Y < 0)
-                return;
             // Amount of ticks is reset after movement until next move.
             localTicks = 0;
             this.Position += coords;

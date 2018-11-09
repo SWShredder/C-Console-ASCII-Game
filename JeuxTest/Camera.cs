@@ -91,7 +91,11 @@ namespace AsciiEngine
         /// Is used to focus and follow the coordinates of a GameObject
         /// </summary>
         /// <param name="obj">Any GameObject instance</param>
-        public void SetFocus(GameObject obj) => ObjectFocused = obj;
+        public void SetFocus(GameObject obj)
+        {
+            objectFocused = obj;
+            position = obj.Position + ObjectFocused.Size - Offset;
+        }
 
         /// <summary>
         /// Automatically adjusts the camera to the screen size
@@ -145,7 +149,8 @@ namespace AsciiEngine
             if (ObjectFocused == null || source != ObjectFocused)
                 return;
             Vector2 newObjectPosition = newObjPosition;
-            Vector2 newCameraPosition = GetNormalizedCameraPosition((newObjectPosition + ObjectFocused.Size - Offset));
+            //Vector2 newCameraPosition = GetNormalizedCameraPosition((newObjectPosition + ObjectFocused.Size - Offset));
+            Vector2 newCameraPosition = newObjectPosition + ObjectFocused.Size - Offset;
 
             Position = newCameraPosition;
         }

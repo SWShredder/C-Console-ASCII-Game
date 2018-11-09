@@ -67,6 +67,7 @@ namespace AsciiEngine
                         UpdateComponents(obj as IUpdate);
                     }
                     Core.Engine.PhysicsSpace.Update();
+                    Core.Renderer.Update();
                     CurrentDisplay.Update();
 
                     Console.SetCursorPosition(0, Console.WindowHeight - 2);

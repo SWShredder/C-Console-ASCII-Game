@@ -68,8 +68,11 @@ namespace AsciiEngine
         {
             set
             {
-                Core.Map.OnPositionUpdate(this, value);
-                Vector2 oldPosition = position;                
+                //Core.Map.OnPositionUpdate(this, value);
+                if (position == null)
+                    position = new Vector2();
+                Vector2 oldPosition = position;    
+                
                 this.position = value;
                 if(this == Camera.Instance.ObjectFocused)
                     Camera.Instance.NotifyCameraPositionChange(this, value);

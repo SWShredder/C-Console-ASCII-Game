@@ -101,6 +101,13 @@ namespace AsciiEngine
         private object parent;
         public object Parent => parent;
         public Animation CurrentAnimation;
+        public Sprite CurrentSprite
+        {
+            get
+            {
+                return (parent as GameObject).SpriteGraphics;
+            }
+        }
         private Frame currentFrame;
         public Frame CurrentFrame
         {

@@ -70,7 +70,7 @@ namespace AsciiEngine
                 Vector2 objPosition = (obj as IPosition).Position;
                 Vector2 objSize = (obj as ISize).Size;
 
-                if (objPosition == null || objPosition == null)
+                if (objPosition == null || objSize == null)
                     continue;
 
                 Vector2 objRelativePosition = objPosition - RenderingPosition;
