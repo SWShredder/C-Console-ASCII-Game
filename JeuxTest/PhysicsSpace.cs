@@ -14,7 +14,7 @@ namespace AsciiEngine
         {
             get
             {
-                Vector2 offset = this.Size - Camera.Instance.Size;
+                Vector2 offset = this.GetSize() - Camera.Instance.GetSize();
                 offset = new Vector2(offset.X / 2, offset.Y / 2);
                 return Camera.Instance.Position - offset;
             }
@@ -27,6 +27,10 @@ namespace AsciiEngine
             }
         }
 
+        public Vector2 GetSize()
+        {
+            return Core.Engine.RenderingSize;
+        }
         public void Update()
         {
             CollisionMap = RenderCollisionMap(out PhysicsBodyDictionary);
@@ -35,7 +39,7 @@ namespace AsciiEngine
 
         public bool CheckCollision(GameObject source, Vector2 targetPosition)
         {
-            PhysicsBody2 collisionBody = (source as IPhysics).PhysicsBody;
+            CollisionShape collisionBody = (source as ICollision).GetCollisionShape();
             Vector2 relativeTargetPosition = targetPosition - this.Position;
 
             for(int x = 0; x< collisionBody.Size.X; ++x)
@@ -44,10 +48,11 @@ namespace AsciiEngine
                 {
                     if(collisionBody[x, y])
                     {
+                        if (CollisionMap == null) return false;
                         if(CollisionMap[x + relativeTargetPosition.X, y + relativeTargetPosition.Y])
                         {
                             Vector2 relativePositionAdjusted = new Vector2(x + targetPosition.X, y + targetPosition.Y);
-                            GameObject targetObject = PhysicsBodyDictionary[relativePositionAdjusted];
+                            PhysicsBodyDictionary.TryGetValue(relativePositionAdjusted, out GameObject targetObject);
                             if (targetObject != source)
                                 return true;
                         }
@@ -67,14 +72,14 @@ namespace AsciiEngine
 
             foreach (GameObject obj in GameObject.List)
             {
-                Vector2 objPosition = (obj as IPosition).Position;
-                Vector2 objSize = (obj as ISize).Size;
+                Vector2 objPosition = (obj as IPosition).GetPosition();
+                Vector2 objSize = (obj as ISize).GetSize();
 
                 if (objPosition == null || objSize == null)
                     continue;
 
                 Vector2 objRelativePosition = objPosition - RenderingPosition;
-                bool[,] objCollision = (obj as IPhysics).PhysicsBody.CollisionPoints;
+                bool[,] objCollision = (obj as ICollision).GetCollisionPoints();
 
                 if (objRelativePosition > 0 && objRelativePosition < RenderingSize)
                 {

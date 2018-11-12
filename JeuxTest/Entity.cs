@@ -65,69 +65,90 @@ namespace AsciiEngine
     {
         private double deltaTime;
         private double localTicks = 0;
-        private double moveSpeed = 80.0;
-
+        private Vector2 moveSpeed = new Vector2(20, 20);
 
         public Player() : base(Core.PlayerGraphic)
         {
-            Systems.Update.Register(this);
-            localTicks = 0;
         }
 
         public Player(string[] graphic, ConsoleColor[,] colorMatrix) : base(graphic, colorMatrix)
         {
-            Systems.Update.Register(this);
-            localTicks = 0;
         }
         // Update method is used to update ticks for the Player.
         public void Update()
         {
 
             // The amount of ticks between update cycles.
-            deltaTime = Systems.Update.DeltaTime;
             // amount of ticks since last movement.
-            localTicks += deltaTime;
             ProcessInput();
+            PhysicsBody.Update();
         }
 
         public void ProcessInput()
         {
-            if (System.Windows.Input.Keyboard.IsKeyDown(Key.Down))
+            Vector2 newDirection = new Vector2();
+
+            if (Core.Engine.Input.KeyDictionary[Key.Down])
             {
-                Move(new Vector2(0, 1));
+                newDirection.Y++;
+            }
+            if (Core.Engine.Input.KeyDictionary[Key.Up])
+            {
+                newDirection.Y--;
+            }
+            if (Core.Engine.Input.KeyDictionary[Key.Left])
+            {
+                newDirection.X--;
+            }
+            if (Core.Engine.Input.KeyDictionary[Key.Right])
+            {
+                newDirection.X++;
+            }
+            if (Core.Engine.Input.KeyDictionary[Key.Z])
+            {
+                Core.Engine.Camera.FitScreenSize();
+
+            }
+            if (Core.Engine.Input.KeyDictionary[Key.Escape])
+            {
+                Core.EndProcesses = true;
+            }
+            PhysicsBody.SetParentMovement(newDirection);
+            /*
+            if (PlayerInput.IsKeyDown(Key.Down))
+            {
+                newDirection.Y++;
             }
             if (System.Windows.Input.Keyboard.IsKeyDown(Key.Up))
             {
-                Move(new Vector2(0, -1));
+                newDirection.Y--;
             }
             if (System.Windows.Input.Keyboard.IsKeyDown(Key.Left))
             {
-                Move(new Vector2(-1, 0));
+                newDirection.X--;
             }
             if (System.Windows.Input.Keyboard.IsKeyDown(Key.Right))
             {
-                Move(new Vector2(1, 0));
+                newDirection.X++;
             }
             if (System.Windows.Input.Keyboard.IsKeyDown(Key.Z))
             {
+                Core.Camera.FitScreenSize();
 
             }
             if (System.Windows.Input.Keyboard.IsKeyDown(Key.Escape))
             {
-                Core.GameExit = true;
+                Core.EndProcesses = true;
             }
+            PhysicsBody.SetParentMovement(newDirection);*/
         }
 
         public void Move(Vector2 coords)
         {
-            // Handles player movespeed.(Needs to be improved and decoupled)
-            if (localTicks < moveSpeed)
-                return;
-            // Handles Collisions. Will not move if CheckCollision == true.
             if (this.CheckCollision(coords))
                 return;
-            // Handles Out of Bound error if player gets to edge of Space. Could be Refactored.
-            // Amount of ticks is reset after movement until next move.
+
+
             localTicks = 0;
             this.Position += coords;
         }

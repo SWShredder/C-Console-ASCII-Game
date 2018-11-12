@@ -13,7 +13,7 @@ namespace AsciiEngine
     /// </summary>
     public class ScreenBuffer : IPosition, ISize
     {
-        public static SafeFileHandle Handler;
+        private readonly SafeFileHandle Handler;
         // FIELDS //
         private Vector2 position;
         private Vector2 size;
@@ -49,6 +49,20 @@ namespace AsciiEngine
                     return position;
             }
         }
+        public void SetPosition(Vector2 newPosition)
+        {
+            position = newPosition;
+        }
+
+        public Vector2 GetPosition()
+        {
+            if (position == null)
+                return Vec2(0, 0);
+            else
+                return position;
+        }
+
+ 
         /// <summary>
         /// A vector2 that is used to represents the size of the render area on the screen. Always returns at least
         /// vector2(0,0)
@@ -69,7 +83,19 @@ namespace AsciiEngine
                     return size;
             }
         }
+        public Vector2 GetSize()
+        {
+            if (size == null)
+                return Vec2(0, 0);
+            else
+                return size;
+        }
 
+        private void SetSize(Vector2 newSize)
+        {
+            size = newSize;
+
+        }
         // CONSTRUCTOR //
         /// <summary>
         /// A handler is created to handle the file which is a console buffer at the creation of ScreenBuffer's instances
@@ -87,9 +113,15 @@ namespace AsciiEngine
         /// </summary>
         public void Draw()
         {
+            area.Left = (short)position.X;
+            area.Top = (short)position.Y;
+            area.Right = (short)(position.X + size.X);
+            area.Bottom = (short)(position.Y + size.Y);
+
             bool b = WriteConsoleOutput(Handler, buffer,
               new Coord() { X = (short)Size.X, Y = (short)Size.Y },
-              new Coord() { X = (short)Position.X, Y = (short)Position.Y },
+              //new Coord() { X = (short)Position.X, Y = (short)Position.Y },
+              new Coord() { X = 0, Y = 0 },
               ref area);
 
         }
@@ -118,6 +150,28 @@ namespace AsciiEngine
             }
             return newBuffer;
         }
+        public void RenderCanvasToBuffer(Canvas renderArea, Vector2 size, Vector2 position)
+        {
+            CharInfo[] newBuffer = new CharInfo[size.Y * size.X];
+            if (renderArea == null)
+            {
+                buffer = newBuffer;
+                return;
+            }
+            SetSize(size);
+
+
+            for (int y = position.Y, y2 = 0; y < position.Y + size.Y; ++y, ++y2)
+            {
+                for (int x = position.X, x2 = 0; x < position.X + size.X; ++x, ++x2)
+                {
+                    newBuffer[(y2 * size.X) + x2].Char.UnicodeChar = renderArea[x, y].Char;
+                    newBuffer[(y2 * size.X) + x2].Attributes = (short)renderArea[x, y].Color;
+                }
+            }
+            buffer = newBuffer;
+        }
+
 
 
         // Used by the class to get access to the WriteConsoleOutput and CreateFile

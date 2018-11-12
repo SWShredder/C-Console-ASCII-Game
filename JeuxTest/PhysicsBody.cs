@@ -6,81 +6,106 @@ using System.Threading.Tasks;
 
 namespace AsciiEngine
 {
-    public class PhysicsBody2 : ISize
+    public class PhysicsBody : IUpdate
     {
         // FIELDS //
-        public bool IsSolid = true;
-        private bool[,] collisionPoints;
+        static protected VectorP Friction = new VectorP(1.8, 1.8);
         private object parent;
-        private Vector2 velocity = new Vector2();
-        public Vector2 Velocity { set; get; }
+        public VectorP Velocity = new VectorP();
+        public double Mass;
+        public double Bounce;
+        public VectorP Position = new VectorP();
+        public VectorP MaxVelocity = new VectorP(1.70, 0.85);
+        public VectorP Acceleration = new VectorP(1.8, 1.2);
+        public VectorP ParentMovement = new VectorP();
 
-
-        // PROPERTIES //
-        /// <summary>
-        /// The parent object is the object to which PhysicsBody is linked.
-        /// </summary>
-        public object Parent => parent;
-        public bool this[int x, int y] => CollisionPoints[x, y];
-        /// <summary>
-        /// Represents a matrix of boolean values that indicate if the corresponding parent object has a physical
-        /// position in a give coordinate. 
-        /// </summary>
-        public bool[,] CollisionPoints => collisionPoints;
-        /// <summary>
-        /// A Vector2 that represents the size of the matrix.
-        /// </summary>
-        public Vector2 Size => new Vector2(collisionPoints.GetLength(0), collisionPoints.GetLength(1));
-
-        // CONSTRUCTOR //
-        /// <summary>
-        /// A sprite graphic is necessary to generate a PhysicsBody2. The constructor calls GetCollisionPointsFromGraphic
-        /// to generate the points.
-        /// </summary>
-        /// <param name="graphic">A Sprite that represents the graphic of the parent object</param>
-        public PhysicsBody2(Sprite graphic)
+        public void Update()
         {
-            collisionPoints = SpriteToCollisionMap(graphic);
-        }
-        /// <summary>
-        /// This is the default constructor that uses a generic object and interfaces with Graphics or Sprite to get
-        /// the collision points map. Also adds the generic object as parent.
-        /// </summary>
-        /// <param name="obj"></param>
-        public PhysicsBody2(object obj)
-        {
-            Sprite sprite;
-            if (obj is IGraphics graphics)
-                sprite = graphics.Graphics.CurrentFrame.Sprite;
-            else if (obj is ISprite _sprite)
-                sprite = _sprite.SpriteGraphics;
-            else
-                return;
-                
-            collisionPoints = SpriteToCollisionMap(sprite);
-            parent = obj;
-        }
-        // METHOD //
-        /// <summary>
-        /// Returns a 2 dimensional array of boolean values. True means the PhysicsBody has a no pass through point
-        /// at the corresponding array coordinates.
-        /// </summary>
-        /// <param name="sprite">Sprite that represents a graphic from which the method will build a physicsBody2</param>
-        /// <returns></returns>
-        private bool[,] SpriteToCollisionMap(Sprite sprite)
-        {
-            bool[,] points = new bool[sprite.Size.X, sprite.Size.Y];
-            for (int y = 0; y < sprite.Size.Y; y++)
+            double delta = Core.Engine.GameUpdate.DeltaTime / 1000.0;
+            if(Velocity.X < 0 && ParentMovement.X == 0)
             {
-                for (int x = 0; x < sprite.Size.X; x++)
-                {
-                    if (sprite[x, y].Char != ' ')
-                        points[x, y] = true;
-                    else
-                        points[x, y] = false;
-                }
+                Velocity.X += Friction.X * delta;
+                if (Velocity.X > 0) Velocity.X = 0;
             }
-            return points;
+            else if(Velocity.X > 0 && ParentMovement.X == 0)
+            {
+                Velocity.X -= Friction.X * delta;
+                if (Velocity.X < 0) Velocity.X = 0;
+            }
+            if (Velocity.Y < 0 && ParentMovement.Y == 0)
+            {
+                Velocity.Y += Friction.Y * delta;
+                if (Velocity.Y > 0) Velocity.Y = 0;
+            }
+            else if (Velocity.Y > 0 && ParentMovement.Y == 0)
+            {
+                Velocity.Y -= Friction.Y * delta;
+                if (Velocity.Y < 0) Velocity.Y = 0;
+            }
+
+
+            Velocity.X += ParentMovement.X * delta * Acceleration.X;
+            Velocity.Y += ParentMovement.Y * delta * Acceleration.Y;
+            Velocity = GetNormalizedVelocity(Velocity);
+
+            if (CollisionDetection(Position + Velocity))
+            {
+                
+                Velocity = new VectorP();
+            }
+
+
+            Position.X += Velocity.X;
+            Position.Y += Velocity.Y;
+
+            UpdateParentPosition(Position);
+
         }
+        private void UpdateParentPosition(VectorP position)
+        {
+            Vector2 parentPosition = (parent as IPosition).GetPosition();
+            Vector2 newPosition = new Vector2();
+            newPosition.X = (int)Math.Round(position.X);
+            newPosition.Y = (int)Math.Round(position.Y);
+
+            if (parentPosition.X != newPosition.X || parentPosition.Y != newPosition.Y)
+            {
+                (parent as GameObject).SetPositionSpecial(newPosition);
+            }
+        }
+
+        private bool CollisionDetection(VectorP targetPosition)
+        {
+            Vector2 newPosition = new Vector2();
+            newPosition.X = (int)Math.Round(targetPosition.X);
+            newPosition.Y = (int)Math.Round(targetPosition.Y);
+            return Core.Engine.PhysicsSpace.CheckCollision((GameObject)parent, newPosition);
+        }
+        public void SetParentMovement(Vector2 movement)
+        {
+            ParentMovement.X = movement.X;
+            ParentMovement.Y = movement.Y;
+        }
+
+        private VectorP GetNormalizedVelocity(VectorP velocity)
+        {
+            VectorP newVelocity = velocity;
+            if (newVelocity.X < -1 * MaxVelocity.X) newVelocity.X = -1 * MaxVelocity.X;
+            if (newVelocity.Y < -1 * MaxVelocity.Y) newVelocity.Y = -1 * MaxVelocity.Y;
+            if (newVelocity.X > MaxVelocity.X) newVelocity.X = MaxVelocity.X;
+            if (newVelocity.Y > MaxVelocity.Y) newVelocity.Y = MaxVelocity.Y;
+
+            return newVelocity;
+        }
+
+        public object Parent => parent;
+
+        public PhysicsBody(object obj)
+        {
+            parent = obj;
+            Position.X = (obj as IPosition).GetPosition().X;
+            Position.Y = (obj as IPosition).GetPosition().Y;
+        }
+
     }
 }

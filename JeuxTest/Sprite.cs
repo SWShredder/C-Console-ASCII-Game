@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace AsciiEngine
 {
-    public class Sprite
+    public class Sprite : ISize
     {
         private Vector2 size;
         public Tile[,] TileTable;
@@ -22,6 +22,12 @@ namespace AsciiEngine
             }
         }
 
+        public Vector2 GetSize()
+        {
+            if (size == null)
+                size = new Vector2(this.TileTable.GetLength(0), this.TileTable.GetLength(1));
+            return size;
+        }
         // Indexer
         public Tile this[int x, int y]
         {

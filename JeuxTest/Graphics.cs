@@ -8,7 +8,7 @@ using static AsciiEngine.Utility;
 namespace AsciiEngine
 {
 
-    public class Frame : IPosition, ISize
+    public class Frame : IPosition
     {
         private Sprite sprite;
         private Vector2 position = Vec2(0, 0);
@@ -17,6 +17,15 @@ namespace AsciiEngine
         {
             set;
             get;
+        }
+
+        public Vector2 GetPosition()
+        {
+            return position;
+        }
+        public void SetPosition(Vector2 newPosition)
+        {
+            position = newPosition;
         }
         public Vector2 Size
         {
@@ -101,12 +110,10 @@ namespace AsciiEngine
         private object parent;
         public object Parent => parent;
         public Animation CurrentAnimation;
-        public Sprite CurrentSprite
+
+        public Sprite GetFrame()
         {
-            get
-            {
-                return (parent as GameObject).SpriteGraphics;
-            }
+            return (parent as GameObject).SpriteGraphics;
         }
         private Frame currentFrame;
         public Frame CurrentFrame
@@ -184,7 +191,7 @@ namespace AsciiEngine
 
            if (Camera.Instance.ObjectFocused == Parent)
                 return;
-            Vector2 parentPosition = (Parent as IPosition) != null ? (Parent as IPosition).Position : new Vector2(0, 0);
+            Vector2 parentPosition = (Parent as IPosition) != null ? (Parent as IPosition).GetPosition() : new Vector2(0, 0);
 
             Vector2 oldParentScreenPosition = parentPosition - oldCameraPosition;
             Vector2 newParentScreenPosition = parentPosition - newCameraPosition;

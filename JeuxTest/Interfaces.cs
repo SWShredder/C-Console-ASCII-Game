@@ -22,28 +22,31 @@ namespace AsciiEngine
     }
     interface IPosition
     {
-        Vector2 Position { set; get; }
+        Vector2 GetPosition();
+        void SetPosition(Vector2 newPosition);
+
     }
     interface ISize
     {
-        Vector2 Size { get; }
+        Vector2 GetSize();
     }
 
-    interface IPhysics
+
+    interface ICollision
     {
-        PhysicsBody2 PhysicsBody { get; }
+        bool[,] GetCollisionPoints();
+        CollisionShape GetCollisionShape();
     }
     interface IMove
     {
 
     }
-    interface IPositionMatrix
-    {
-        PositionMatrix PositionMatrix { get; }
-    }
+
     interface IGraphics
     {
-        Graphics Graphics { get; }
+        Sprite GetFrame();
+        Vector2 GetFramePosition();
+
     }
     interface IInput
     {

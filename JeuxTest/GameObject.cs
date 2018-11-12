@@ -6,35 +6,33 @@ namespace AsciiEngine
     /// <summary>
     /// The class represents all object that inhabits the game space including entities, the player, projectiles, etc.
     /// </summary>
-    public class GameObject : IPosition, IEnumerable<GameObject>, IMove, ISize, IPositionMatrix, IGraphics, ISprite, IPhysics
+    public class GameObject : IPosition, IEnumerable<GameObject>, IMove, ISize, IGraphics, ISprite, ICollision
     {
-        /// <summary>
-        /// The event handler of the GameObject class to raise events when the GameObject changes position.
-        /// </summary>
-        /// <param name="source">A generic object instance that will be used by the observer</param>
-        /// <param name="args">Args contain the vector2 values of the old position and the new position of the GameObject's instance</param>
+
         public delegate void ObjectPositionChangeEventHandler(object source, ObjectPositionEventArgs args);
         public event ObjectPositionChangeEventHandler ObjectPositionChanged;
 
-        /// <summary>
-        /// A list of all GameObject instances. Every GameObject instances registers to the list at creation
-        /// </summary>
         static public List<GameObject> List = new List<GameObject>();
 
         // FIELDS//
         private Graphics graphics;
         private Sprite spriteGraphics;
         private Vector2 position;
+        private CollisionShape collisionBody;
 
         // PROPERTIES //
-        public PhysicsBody2 PhysicsBody { set; get; }
-        /// <summary>
-        /// Returns a Position Matrix constructed from this instance's size and position
-        /// </summary>
-        public PositionMatrix PositionMatrix => new PositionMatrix(this.Size, this.Position);
-        /// <summary>
-        /// Returns GameObject's instance's Sprite and if null, returns a DefaultGraphics.
-        /// </summary>
+
+        public bool[,] GetCollisionPoints()
+        {
+            return this.collisionBody.CollisionPoints;
+        }
+        public CollisionShape GetCollisionShape()
+        {
+            return collisionBody;
+        }
+
+        public PhysicsBody PhysicsBody { set; get; }
+ 
         public Sprite SpriteGraphics
         {
             get
@@ -48,9 +46,7 @@ namespace AsciiEngine
                 spriteGraphics = value;
             }
         }
-        /// <summary>
-        /// Returns the size of GameObject's instance's SpriteGraphics size.
-        /// </summary>
+
         public Vector2 Size
         {
             get
@@ -58,12 +54,11 @@ namespace AsciiEngine
                 return this.SpriteGraphics.Size;
             }
         }
-        ////// NEEDS TO BE REWORKED /////
-        /// <summary>
-        /// (WIP) When Position is set, the values that depend on GameObject's instance's position are updated
-        /// at the same time. If no position exists and the engine needs to check the instance's position it is assumed
-        /// to be (0,0)
-        /// </summary>
+
+        public Vector2 GetSize()
+        {
+            return this.SpriteGraphics.GetSize();
+        }
         public Vector2 Position
         {
             set
@@ -86,46 +81,75 @@ namespace AsciiEngine
             }
 
         }
+
+        public Vector2 GetPosition()
+        {
+            if (position == null)
+                position = new Vector2(0, 0);
+            return position;
+        }
+        public void SetPosition(Vector2 newPosition)
+        {
+            if (position == null)
+                position = new Vector2();
+            Vector2 oldPosition = position;
+
+
+            this.position = newPosition;
+            if (this == Camera.Instance.ObjectFocused)
+                Camera.Instance.NotifyCameraPositionChange(this, newPosition);
+            OnObjectPositionChanged(oldPosition, newPosition);
+            PhysicsBody.Position.X = newPosition.X;
+            PhysicsBody.Position.Y = newPosition.Y;
+
+        }
+
+        public void SetPositionSpecial(Vector2 newPosition)
+        {
+            if (position == null)
+                position = new Vector2();
+            Vector2 oldPosition = position;
+
+
+            this.position = newPosition;
+            if (this == Camera.Instance.ObjectFocused)
+                Camera.Instance.NotifyCameraPositionChange(this, newPosition);
+            OnObjectPositionChanged(oldPosition, newPosition);
+
+        }
         public Graphics Graphics => graphics;
 
-        /// METHODS ////
-        /// <summary>
-        /// (WIP)The common initialize method to all constructors. It adds a Graphics to all object created, adds the instance to
-        /// the list and registers for update.
-        /// </summary>
+        public Sprite GetFrame()
+        {
+            return this.SpriteGraphics;
+        }
+
+        public Vector2 GetFramePosition()
+        {
+            return this.position;
+        }
         private void Initialize()
         {
-            graphics = new Graphics(this);
             List.Add(this);
-            Systems.Update.Register(this);
+            graphics = new Graphics(this);
+            collisionBody = new CollisionShape(this);
+            PhysicsBody = new PhysicsBody(this);
+            
         }
-        /// <summary>
-        /// (WIP) Basic constructor with no color matrix. Adds a physicsBody2 to the instance.
-        /// </summary>
-        /// <param name="graphics">Represents a Sprite graphics assigned to a GameObject's instance</param>
-        public GameObject(string[] graphics)
+
+        public GameObject(string[] asciiSprite)
         {
+            SpriteGraphics = new Sprite(asciiSprite);
             Initialize();
-            SpriteGraphics = new Sprite(graphics);
-            PhysicsBody = new PhysicsBody2(SpriteGraphics);
+            
         }
-        /// <summary>
-        /// (WIP) Overdriven constructor to handle color matrixes.
-        /// </summary>
-        /// <param name="graphics">Represents a Sprite graphics assigned to GameObject's instance</param>
-        /// <param name="colorMatrix">Represents the color Matric assigned </param>
-        public GameObject(string[] graphics, ConsoleColor[,] colorMatrix)
+
+        public GameObject(string[] asciiSprite, ConsoleColor[,] colorMatrix)
         {
+            SpriteGraphics = new Sprite(asciiSprite, colorMatrix);
             Initialize();
-            SpriteGraphics = new Sprite(graphics, colorMatrix);
-            PhysicsBody = new PhysicsBody2(SpriteGraphics);
         }
-        /// <summary>
-        /// The method raises an event when the GameObject's position is changed. The event is sent to all
-        /// connected modules that belong to GameObject.
-        /// </summary>
-        /// <param name="oldPosition">A vector2 that represents the old position of the GameObject before the position was updated</param>
-        /// <param name="newPosition">A vector2 that represents the new position after the GameObject's position was updated</param>
+
         protected virtual void OnObjectPositionChanged(Vector2 oldPosition, Vector2 newPosition)
         {
             ObjectPositionChanged?.Invoke(this, new ObjectPositionEventArgs()
@@ -134,11 +158,7 @@ namespace AsciiEngine
                 NewPosition = newPosition,
             });
         }
-        /// <summary>
-        /// (UNUSED) Updates the block inside Update() every game updates.
-        /// </summary>
 
-        // The code to make GameObject Enumeratable.
         public IEnumerator<GameObject> GetEnumerator()
         {
             for (int i = 0; i < List.Count; i++)

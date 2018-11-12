@@ -38,6 +38,10 @@ namespace AsciiEngine
         {
             return new Vector2(x, y);
         }
+        public static long GetEngineTicks()
+        {
+            return Core.Engine.GameUpdate.EngineTicks;
+        }
 
     }
 
@@ -82,6 +86,32 @@ namespace AsciiEngine
         public override string ToString()
         {
             return String.Format("'{0}':{1}", Char, Color);
+        }
+    }
+    public class VectorP
+    {
+        public double X;
+        public double Y;
+
+        public VectorP()
+        {
+            X = 0;
+            Y = 0;
+        }
+
+        public VectorP(double x, double y)
+        {
+            X = x;
+            Y = y;
+        }
+
+        public static VectorP operator - (VectorP vec1, VectorP vec2)
+        {
+            return new VectorP(vec1.X - vec2.X, vec1.Y - vec2.Y); 
+        }
+        public static VectorP operator +(VectorP vec1, VectorP vec2)
+        {
+            return new VectorP(vec1.X + vec2.X, vec1.Y + vec2.Y);
         }
     }
 
@@ -173,93 +203,5 @@ namespace AsciiEngine
         {
             return vecA.X > vecB.X && vecA.Y > vecB.Y;
         }
-
-
-
     }
-    public class Matrix : ISize
-    {
-        private object[,] objectMatrix;
-        public Vector2 Size
-        {
-            get
-            {
-                return new Vector2(objectMatrix.GetLength(0), objectMatrix.GetLength(1));
-            }
-        }
-        public Matrix(Vector2 size)
-        {
-            objectMatrix = new object[size.X, size.Y];
-        }
-        public object this[int x, int y]
-        {
-            set
-            {
-                objectMatrix[x, y] = value;
-            }
-            get
-            {
-                return objectMatrix[x, y];
-            }
-        }
-    }
-
-
-    public class PositionMatrix : ISize
-    {
-        private Vector2[,] PosMatrix;
-        public Vector2 Size
-        {
-            get
-            {
-                return new Vector2(PosMatrix.GetLength(0), PosMatrix.GetLength(1));
-            }
-        }
-        public PositionMatrix(Vector2 size, Vector2 position)
-        {
-            PosMatrix = new Vector2[size.X, size.Y];
-            SetPosition(position);
-        }
-
-        public void SetPosition(Vector2 position)
-        {
-            UpdatePositionMatrix(position);
-        }
-        private void UpdatePositionMatrix(Vector2 position)
-        {
-            for (int x = 0; x < this.Size.X; x++)
-            {
-                for (int y = 0; y < this.Size.Y; y++)
-                {
-                    PosMatrix[x, y] = position + new Vector2(x, y);
-                }
-            }
-        }
-        public Vector2 this[int i, int j]
-        {
-            get
-            {
-                return PosMatrix[i, j];
-            }
-            set
-            {
-                PosMatrix[i, j] = value;
-            }
-        }
-        public override string ToString()
-        {
-            string matrixString = "";
-            for(int x = 0; x < this.Size.X; x++)
-            {
-                for(int y = 0; y < this.Size.Y; y++)
-                {
-                    matrixString += this.PosMatrix[x, y];
-                }
-            }
-            return matrixString;
-        }
-
-    }
-   
-
 }

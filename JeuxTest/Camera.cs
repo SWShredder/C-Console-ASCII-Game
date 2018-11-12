@@ -39,10 +39,15 @@ namespace AsciiEngine
             set => objectFocused = value;
             get => objectFocused;
         }
-        public Vector2 Size
+
+        public Vector2 GetSize()
         {
-            set => size = value;
-            get => size;
+            return size;
+        }
+
+        public void SetSize(Vector2 newSize)
+        {
+            size = newSize;
         }
         /// <summary>
         /// Checks if the position is different and if it is, updates the field position and raise the event
@@ -67,6 +72,17 @@ namespace AsciiEngine
                     position = Vec2(0, 0);
                 return position;
             }
+        }
+
+        public Vector2 GetPosition()
+        {
+            if (position == null)
+                position = new Vector2();
+            return position;
+        }
+        public void SetPosition(Vector2 newPosition)
+        {
+            position = newPosition;
         }
 
         /// <summary>
@@ -102,7 +118,9 @@ namespace AsciiEngine
         /// </summary>
         public void FitScreenSize()
         {
-            this.Size = GetWindowSize() - new Vector2(SizeOffsetX, SizeOffsetY);
+            this.size = GetWindowSize() - new Vector2(SizeOffsetX, SizeOffsetY);
+            if (objectFocused != null)
+                position = objectFocused.Position + ObjectFocused.Size - Offset;
         }
 
         /// <summary>
@@ -132,7 +150,7 @@ namespace AsciiEngine
         public void OnObjectFocusPositionChanged(object source, ObjectPositionEventArgs args)
         {
             Vector2 newObjectPosition = args.NewPosition;
-            Vector2 newCameraPosition = GetNormalizedCameraPosition((newObjectPosition + ObjectFocused.Size - Offset));
+            Vector2 newCameraPosition = newObjectPosition + ObjectFocused.Size - Offset;
 
             Position = newCameraPosition;
         }
@@ -155,25 +173,5 @@ namespace AsciiEngine
             Position = newCameraPosition;
         }
 
-        /// <summary>
-        /// This method is used to stop the camera from going to coordinates off screen 
-        /// (negative coordinates or coordinates off the current screen size) which would otherwise
-        /// throw exceptions. Returns a vector2 position.
-        /// </summary>
-        /// <param name="newCameraPosition">The new vector2 Camera instance's absolute position in space</param>
-        /// <returns></returns>
-        private Vector2 GetNormalizedCameraPosition(Vector2 newCameraPosition)
-        {
-            if (newCameraPosition.X < 0)
-                newCameraPosition.X = 0;
-            if (newCameraPosition.Y < 0)
-                newCameraPosition.Y = 0;
-            if (newCameraPosition.X > Core.Map.Size.X - this.Size.X)
-                newCameraPosition.X = Core.Map.Size.X - this.Size.X;
-            if (newCameraPosition.Y > Core.Map.Size.Y - this.Size.Y)
-                newCameraPosition.Y = Core.Map.Size.Y - this.Size.Y;
-
-            return newCameraPosition;
-        }
     }
 }
