@@ -8,195 +8,81 @@ using static AsciiEngine.Utility;
 namespace AsciiEngine
 {
 
-    public class Frame : IPosition
+    public class Graphics : INodes
     {
-        private Sprite sprite;
-        private Vector2 position = Vec2(0, 0);
-        private Vector2 size = Vec2(0, 0);
-        public Vector2 Position
-        {
-            set;
-            get;
-        }
+        private byte[,] parentByteMapArray;
+        private byte[,] cacheByteMapArray;
 
-        public Vector2 GetPosition()
-        {
-            return position;
-        }
-        public void SetPosition(Vector2 newPosition)
-        {
-            position = newPosition;
-        }
-        public Vector2 Size
-        {
-            set
-            {
-                sprite = EmptyFrame(value);
-            }
-            get
-            {
-                if (sprite == null)
-                    return size;
-                else
-                    return sprite.Size;
-            }
-        }
-        public Sprite Sprite
-        {
-            set
-            {
-                sprite = value;
-            }
-            get
-            {
-                return sprite;
-            }
-        }
-
-
-
-        public Frame(Sprite sprite)
-        {
-            this.sprite = sprite;
-            this.size = sprite.Size;
-        }
-
-        public Frame()
-        {
-
-        }
-
-
-
-        // Allows the class to generate an empty frame of any size.
-        private Sprite EmptyFrame(Vector2 size)
-        {
-            string[] emptyFrame = new string[size.Y];
-            for (int y = 0; y < size.Y; y++)
-            {
-                string emptyLine = "";
-                for (int x = 0; x < size.X; x++)
-                {
-                    emptyLine += " ";
-                }
-                emptyFrame[y] = emptyLine;
-            }
-            return new Sprite(emptyFrame);
-        }
-    }
-
-
-
-    public class Animation
-    {
-        public string Name;
-        public Frame[] Frames;
-        public int Length;
-        public int FrameIndex;
-        public bool IsPlaying;
-        public int Speed;
-
-    }
-
-
-
-
-    public class Graphics
-    {
-        public delegate void DrawEventHandler(object source, DrawRequestEventArgs args);
-        public event DrawEventHandler DrawRequest;
-
-        public Dictionary<string, Animation> Animations = new Dictionary<string, Animation>();
-        private object parent;
-        public object Parent => parent;
-        public Animation CurrentAnimation;
-
-        public Sprite GetFrame()
-        {
-            return (parent as GameObject).SpriteGraphics;
-        }
-        private Frame currentFrame;
-        public Frame CurrentFrame
+        public INodes Parent { set; get; }
+        public List<INodes> Children { set; get; }
+        public byte[,] ByteMap
         {
             get
             {
-                if (currentFrame == null)
-                {
-                    currentFrame = new Frame((parent as GameObject).SpriteGraphics);
-
-                }
-                return currentFrame;
-            }
-            set
-            {
-                currentFrame = value;
+                return cacheByteMapArray;
             }
         }
 
-        private Vector2 screenPosition;
-        public Vector2 ScreenPosition
+        public Graphics(INodes parent)
         {
-            get
-            {
-                return screenPosition;
-            }
-            set
-            {
-                screenPosition = value;
+            Parent = parent;
+            this.parentByteMapArray = (Parent as GameObject).Body;
+            this.cacheByteMapArray = this.parentByteMapArray;
+        }
+
+        public void UpdateCache()
+        {
+            var parent = Parent as GameObject;
+            int rotation = 0;
+            if (parent.FacingDirection == Direction.East) rotation = 90;
+            if (parent.FacingDirection == Direction.South) rotation = 180;
+            if (parent.FacingDirection == Direction.West) rotation = 270;
+            ApplyRotation(rotation);
+        }
+
+        public void ApplyRotation(int degree)
+        {
+            var array = parentByteMapArray;
+            switch (degree)
+            {           
+                case 90:
+                    Utility.GetRotated90degreeMatrix(parentByteMapArray, out cacheByteMapArray);
+                    break;
+                case 180:                  
+                    Utility.GetRotated90degreeMatrix(array, out cacheByteMapArray);
+                    array = cacheByteMapArray;
+                    Utility.GetRotated90degreeMatrix(array, out cacheByteMapArray);
+                    break;
+                case 270:
+                    Utility.GetRotated90degreeMatrix(array, out cacheByteMapArray);
+                    array = cacheByteMapArray;
+                    Utility.GetRotated90degreeMatrix(array, out cacheByteMapArray);
+                    array = cacheByteMapArray;
+                    Utility.GetRotated90degreeMatrix(array, out cacheByteMapArray);
+                    break;
+                default:
+                    cacheByteMapArray = parentByteMapArray;
+                    break;
             }
         }
 
-        public Graphics(object _parent)
+        public void Update()
         {
-            parent = _parent;
-            // Signal registry for Camera
-            Camera.Instance.CameraPositionChanged += OnCameraPositionChanged;
-            // Signal registry for ScreenRenderer
-           //DrawRequest += Core.ScreenRenderer.OnDrawRequest;
-            // Signal registry with Parent
-            (parent as GameObject).ObjectPositionChanged += OnParentObjectPositionChanged;
-
-        }
-
-
-
-        protected virtual void OnDrawRequest(Vector2 oldPosition, Vector2 newPosition)
-        {
-            DrawRequest?.Invoke(parent, new DrawRequestEventArgs()
+            Core.Engine.Renderer.AddRenderUpdateQuery(new RenderUpdateSignal()
             {
-                OldPosition = oldPosition,
-                NewPosition = newPosition,
-                Sprite = CurrentFrame.Sprite,
+                ByteMap = this.ByteMap,
+                Position = (Parent as GameObject).Position
             });
         }
 
-
-        public void OnParentObjectPositionChanged(object source, ObjectPositionEventArgs args)
+        public void AddChild(INodes child)
         {
-            // Insert New code Here; 
-            /*Vector2 oldPosition = args.OldPosition;
-            Vector2 newPosition = args.NewPosition;
-            Vector2 parentPosition = (source as IPosition).Position;
-            OnDrawRequest(oldPosition, newPosition);*/
-
-            Vector2 oldPosition = args.OldPosition - Camera.Instance.Position;
-            Vector2 newPosition = args.NewPosition - Camera.Instance.Position;
-            OnDrawRequest(oldPosition, newPosition);
+            Children.Add(child);
         }
 
-        public void OnCameraPositionChanged(object source, CameraPositionEventArgs args)
+        public void RemoveChild(INodes child)
         {
-            Vector2 oldCameraPosition = args.OldPosition;
-            Vector2 newCameraPosition = args.NewPosition;
-
-           if (Camera.Instance.ObjectFocused == Parent)
-                return;
-            Vector2 parentPosition = (Parent as IPosition) != null ? (Parent as IPosition).GetPosition() : new Vector2(0, 0);
-
-            Vector2 oldParentScreenPosition = parentPosition - oldCameraPosition;
-            Vector2 newParentScreenPosition = parentPosition - newCameraPosition;
-
-            OnDrawRequest(oldParentScreenPosition , newParentScreenPosition);
+            Children.Remove(child);
         }
     }
 }

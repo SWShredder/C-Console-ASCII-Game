@@ -1,23 +1,25 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace AsciiEngine
 {
-    public class SystemsUpdate
+    public class CoreUpdate
     {
-        public long EngineTicks => DateTime.Now.Ticks;
+        public long EngineTicks => Core.Time.ElapsedTicks;
+        public long TicksResolution = Stopwatch.Frequency;
         public double DeltaTime;
 
         private double DeltaOffset = 1;
-        private double DeltaTimeDisplay = 0;
+        public double DeltaTimeDisplay = 0;
         public int FrameRate = 60;
-        public int FixedProcessUPS = 90;
+        public int FixedProcessUPS = 60;
 
-        private long fixedProcessTicks = DateTime.Now.Ticks;
-        private long displayProcessTicks = DateTime.Now.Ticks;
+        private long fixedProcessTicks = Core.Time.ElapsedTicks;
+        private long displayProcessTicks = Core.Time.ElapsedTicks;
 
 
         private int metricsCounter = 0;
@@ -49,9 +51,9 @@ namespace AsciiEngine
 
                 Console.SetCursorPosition(0, Console.WindowHeight - 2);
                 Console.Write("Update : {0:N3}ms    GameObjects : {1:N3}ms    Physics : {2:N3}ms    Rendering : {3:N3}ms    " +
-                    "Display : {4:N3}ms     Logical Cores : {5}    RenderType : {6}    FPS Cap : {7}    ",
-                   DeltaTime, objDelta, physicsDelta, renderDelta, displayDelta,
-                   Core.Engine.ProcessorCoresCount, Core.Engine.RenderType, FrameRate);
+                    "Display : {4:N3}ms       RenderType : {5}    ",
+                   DeltaTime, objDelta, physicsDelta, renderDelta, DeltaTimeDisplay,
+                   Core.Engine.RenderType, FrameRate);
 
             }
 
@@ -59,39 +61,31 @@ namespace AsciiEngine
 
             Console.SetCursorPosition(0, Console.WindowHeight - 1);
             Console.Write(
-                "Player Position : {0}   Camera Area : {1}:{2}    Rendering Area : {3}:{4}    Velocity : {5:N3};{7:N3}" +
-                "      PhysicsPosition: {6:N3};{8:N3}   ", 
-                Core.Engine.player.Position,
+                "PlayerBiomePosition : {0}   Camera Area : {1}:{2}    Velocity : {3:N3};{5:N3}" +
+                "      PhysicsPosition: {4:N3};{6:N3}    BiomeType: {7}   BiomePosition: {8}      ",
+                (World.Player.Parent as Chunk).Position,
                 Core.Engine.Camera.Position,
-                Core.Engine.Camera.Position + Core.Engine.Camera.GetSize(), 
-                Core.Engine.Renderer.Position, 
-                Core.Engine.Renderer.Position + Core.Engine.Renderer.GetSize(),
-                Core.Engine.player.PhysicsBody.Velocity.X, 
-                Core.Engine.player.PhysicsBody.Position.X,
-                Core.Engine.player.PhysicsBody.Velocity.Y,
-                Core.Engine.player.PhysicsBody.Position.Y
+                Core.Engine.Camera.Position + Core.Engine.Camera.Size,
+                World.Player.PhysicsBody.Velocity.X,
+                World.Player.PhysicsBody.Position.X,
+                World.Player.PhysicsBody.Velocity.Y,
+                World.Player.PhysicsBody.Position.Y,
+                (World.Instance.Children[4] as Chunk).Biome.Type,
+                (World.Instance.Children[4] as Chunk).Position
                 );
         }
 
         public void Processes()
         {
-            if ((EngineTicks - fixedProcessTicks) / 10000.0 > (1000.0 / FixedProcessUPS - DeltaOffset))
+            List<Task> taskList = new List<Task>();
+            if (1.0 * (EngineTicks - fixedProcessTicks) / TicksResolution * 1000.0 > 16.0)
             {
-                DeltaTime = (EngineTicks - fixedProcessTicks) / 10000.0;
+                DeltaTime = 1.0 * (EngineTicks - fixedProcessTicks) / TicksResolution * 1000.0;
                 fixedProcessTicks = EngineTicks;
                 UpdateFixedProcesses();
-            }
-
-            if((EngineTicks - displayProcessTicks) / 10000.0 > (1000.0 / FrameRate - DeltaOffset))
-            {
-                displayProcessTicks = EngineTicks;
-                long ticks = EngineTicks;
                 UpdateDisplay();
-                DeltaTimeDisplay = (EngineTicks - ticks) / 10000.0;
             }
             
-
-
         }
         private void UpdateDisplay()
         {
@@ -100,19 +94,26 @@ namespace AsciiEngine
 
         private void UpdateFixedProcesses()
         {
+            Vector2 renderingPosition = Core.Engine.Renderer.Position;
+            Vector2 renderingSize = Core.Engine.Renderer.Size;
+
             long ticks = EngineTicks;
-            foreach (GameObject obj in GameObject.List)
+            /*foreach (GameObject obj in GameObject.List)
             {
+                if (obj.Position.X < renderingPosition.X || obj.Position.Y < renderingPosition.Y) continue;
+                if (obj.Position.X >= renderingPosition.X + renderingSize.X || obj.Position.Y >= renderingPosition.Y + renderingSize.Y) continue;
                 if ((obj as IUpdate) == null) continue;
+
                 (obj as IUpdate).Update();
-            }
-            double deltaTimeObject = (EngineTicks - ticks) / 10000.0;
+            }*/
+            World.Instance.Update();
+            double deltaTimeObject = 1.0 * (EngineTicks - ticks) / TicksResolution * 1000.0;
             ticks = EngineTicks;
             Core.Engine.PhysicsSpace.Update();
-            double deltaTimePhysics = (EngineTicks - ticks) / 10000.0;
+            double deltaTimePhysics = 1.0 * (EngineTicks - ticks) / TicksResolution * 1000.0;
             ticks = EngineTicks;
             Core.Engine.Renderer.Update();
-            double deltaTimeRender = (EngineTicks - ticks) / 10000.0;
+            double deltaTimeRender = 1.0 * (EngineTicks - ticks) / TicksResolution * 1000.0;
 
 
             UpdateMetrics(deltaTimeObject, deltaTimePhysics, deltaTimeRender, DeltaTimeDisplay);

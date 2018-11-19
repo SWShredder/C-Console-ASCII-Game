@@ -7,6 +7,52 @@ using System.Threading.Tasks;
 
 namespace AsciiEngine
 {
+    public enum Direction
+    {
+        North, South, East, West
+    }
+
+    public class CollisionEventSignal
+    {
+        public DamageQuery DamageQuery;
+        public PhysicsImpactSignal ImpactSignal;
+    }
+    public class DamageQuery
+    {
+        public GameObject source;
+        public double Damage;
+    }
+
+    public class PhysicsImpactSignal
+    {
+        public VectorP CollisionVector;
+        public double ImpactForce;
+    }
+
+    public class RenderUpdateSignal
+    {
+        public Vector2 Position;
+        public byte[,] ByteMap;
+    }
+    public class CollisionUpdateSignal
+    {
+        public bool IsTrigger = false;
+        public INodes Source;
+        public Vector2 Position;
+        public bool[,] CollisionMap;
+    }
+    public class PositionUpdateSignal
+    {
+        public INodes Source;
+        public Vector2 NewPosition;
+    }
+
+    public class ChunkTransferSignal
+    {
+        public INodes Source;
+        public Vector2 NewChunkPosition;
+    }
+
     public class CameraPositionEventArgs : EventArgs
     {
         public Vector2 OldPosition { set; get; }
@@ -30,6 +76,48 @@ namespace AsciiEngine
 
     static public class Utility
     {
+        public static bool GetRotated90degreeMatrix(byte[,] matrix, out byte[,] newByteArray)
+        {
+            if (matrix == null)
+            {
+                newByteArray = new byte[0, 0];
+                return false;
+            }
+                
+            newByteArray = new byte[matrix.GetLength(1), matrix.GetLength(0)];
+            int indexY = matrix.GetLength(1);
+            for(int x = 0; x < matrix.GetLength(1); ++x)
+            {
+                --indexY;
+                for(int y = 0; y < matrix.GetLength(0); ++y)
+                {
+                    newByteArray[x, y] = matrix[y, indexY];
+                }
+            }
+            return true;
+        }
+
+        public static bool GetRotated90DegreeMatrix(bool[,] matrix, out bool[,] newBoolArray)
+        {
+            if (matrix == null)
+            {
+                newBoolArray = new bool[0, 0];
+                return false;
+            }
+
+            newBoolArray = new bool[matrix.GetLength(1), matrix.GetLength(0)];
+            int indexY = matrix.GetLength(1);
+            for (int x = 0; x < matrix.GetLength(1); ++x)
+            {
+                --indexY;
+                for (int y = 0; y < matrix.GetLength(0); ++y)
+                {
+                    newBoolArray[x, y] = matrix[y, indexY];
+                }
+            }
+            return true;
+        }
+
         public static Vector2 GetWindowSize()
         {
             return new Vector2(Console.WindowWidth, Console.WindowHeight);
@@ -40,54 +128,14 @@ namespace AsciiEngine
         }
         public static long GetEngineTicks()
         {
-            return Core.Engine.GameUpdate.EngineTicks;
+            return Core.Engine.CoreUpdate.EngineTicks;
         }
 
     }
 
-    public class Tile
-    {
-        private ConsoleColor color;
-        private Char _Char;
-        // Properties are Color and Char
-        public ConsoleColor Color
-        {
-            get
-            {
-                return color;
-            }
-            set
-            {
-                color = value;
-            }
-        }
-        public char Char
-        {
-            private set
-            {
-                _Char = value;
-            }
-            get
-            {
-                return _Char;
-            }
-        }
-        // Basic constructor.
-        public Tile(char _char, ConsoleColor _color)
-        {
-            Char = _char;
-            Color = _color;
-        }
-        public Tile(char _char)
-        {
-            Char = _char;
-            Color = ConsoleColor.Gray;
-        }
-        public override string ToString()
-        {
-            return String.Format("'{0}':{1}", Char, Color);
-        }
-    }
+ 
+
+    
     public class VectorP
     {
         public double X;

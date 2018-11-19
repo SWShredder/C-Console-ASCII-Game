@@ -9,7 +9,7 @@ using static AsciiEngine.Utility;
 
 namespace AsciiEngine
 {
-    public class Input
+    public class CoreInput
     {
         public Dictionary<Key, bool> KeyDictionary = new Dictionary<Key, bool>
         {
@@ -28,7 +28,7 @@ namespace AsciiEngine
             Thread InputThread = new Thread(() =>
             {
                 double ticks = GetEngineTicks();
-                while(!Core.EndProcesses)
+                while(!Core.Engine.EndProcesses)
                 {
                     //ticks = GetEngineTicks();
                     KeyDictionary[Key.Down] = Keyboard.IsKeyDown(Key.Down);
@@ -42,14 +42,12 @@ namespace AsciiEngine
                     UpdateSystemInput();
                     Thread.Sleep(8);
                 }
- 
-                // do something with retVal
             });
             InputThread.SetApartmentState(ApartmentState.STA);
             InputThread.Start();
         }
 
-        public Input()
+        public CoreInput()
         {
             StartThread();
         }
@@ -58,19 +56,23 @@ namespace AsciiEngine
         {
             if (KeyDictionary[Key.F1])
             {
-                switch (Core.Engine.GameUpdate.FrameRate)
+                switch (Core.Engine.CoreUpdate.FrameRate)
                 {
                     case 60:
-                        Core.Engine.GameUpdate.FrameRate = 999;
+                        Core.Engine.CoreUpdate.FrameRate = 999;
                         break;
                     case 30:
-                        Core.Engine.GameUpdate.FrameRate = 60;
+                        Core.Engine.CoreUpdate.FrameRate = 60;
                         break;
                     default:
-                        Core.Engine.GameUpdate.FrameRate = 30;
+                        Core.Engine.CoreUpdate.FrameRate = 30;
                         break;
                 }
 
+            }
+            if (KeyDictionary[Key.Escape])
+            {
+                Core.Engine.EndProcesses = true;
             }
             if (KeyDictionary[Key.F12])
             {

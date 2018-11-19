@@ -13,8 +13,13 @@ namespace AsciiEngine
 
         public async void Update()
         {
+            long ticks = Core.Engine.CoreUpdate.EngineTicks;
             UpdateDisplayManager(Core.Engine.RenderType);
-            await Task.WhenAll(threadList.ToArray());
+            if(Core.Engine.isDisplayParallel)
+                await Task.WhenAll(threadList.ToArray());
+            else
+                Task.WaitAll(threadList.ToArray());
+            Core.Engine.CoreUpdate.DeltaTimeDisplay = 1.0 * (Core.Engine.CoreUpdate.EngineTicks - ticks) / Core.Engine.CoreUpdate.TicksResolution * 1000.0;
         }
 
         public void UpdateDisplayManager(int renderType)
@@ -31,10 +36,8 @@ namespace AsciiEngine
         private void SingleBufferDisplay()
         {
             List<Task> newThreadList = new List<Task>();
-
-            var renderBuffer = Task.Run(() => Core.Engine.Renderer.GetSingleScreenBuffer().Draw());
-            newThreadList.Add(renderBuffer);
-
+            var render = Task.Run(() => Core.Engine.Renderer.GetSingleScreenBuffer().Draw());
+            newThreadList.Add(render);
             this.threadList = newThreadList;
         }
 

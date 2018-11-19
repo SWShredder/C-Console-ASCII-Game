@@ -9,70 +9,40 @@ namespace AsciiEngine
     public class Sprite : ISize
     {
         private Vector2 size;
-        public Tile[,] TileTable;
-
-        // PROPERTIES //       
+        public byte[,] TilesByteMap;
+     
         public Vector2 Size
         {
             get
             {
                 if (size == null)
-                    size = new Vector2(this.TileTable.GetLength(0), this.TileTable.GetLength(1));
+                    size = new Vector2(this.TilesByteMap.GetLength(0), this.TilesByteMap.GetLength(1));
                 return size;
             }
         }
-
-        public Vector2 GetSize()
+        public Byte this[int x, int y]
         {
-            if (size == null)
-                size = new Vector2(this.TileTable.GetLength(0), this.TileTable.GetLength(1));
-            return size;
-        }
-        // Indexer
-        public Tile this[int x, int y]
-        {
-            get => TileTable[x, y];
-            set => TileTable[x, y] = value;
+            get => TilesByteMap[x, y];
+            set => TilesByteMap[x, y] = value;
         }
 
         // INITIALIZATION
         public Sprite(string[] charArray)
         {
-            TileTable = GenerateTileTable(charArray);
+            TilesByteMap = Tiles.GenerateByteArrayMap(charArray);
         }
 
         public Sprite(string[] charArray, ConsoleColor[,] colorMatrix)
         {
-
-            TileTable = GenerateTileTable(charArray, colorMatrix);
+            TilesByteMap = Tiles.GenerateByteArrayMap(charArray, colorMatrix);
         }
 
-
-        private Tile[,] GenerateTileTable(string[] charArray, ConsoleColor[,] colorMatrix)
+        public static Sprite Generate(string[] graphics, ConsoleColor[,] colorMatrix = null)
         {
-            Tile[,] newTileTable = new Tile[charArray[0].Length, charArray.Length];
-            for (int y = 0; y < charArray.Length; y++)
-            {
-                for (int x = 0; x < charArray[0].Length; x++)
-                {
-                    newTileTable[x, y] = new Tile(charArray[y][x], colorMatrix[y, x]);
-                }
-            }
-            return newTileTable;
+            Sprite newSprite = colorMatrix == null ? new Sprite(graphics) : new Sprite(graphics, colorMatrix);
+            //newSprite.TilesByteMap = colorMatrix == null ? Tiles.GenerateByteArrayMap(graphics) : Tiles.GenerateByteArrayMap(graphics, colorMatrix);
+            return newSprite;
         }
-        private Tile[,] GenerateTileTable(string[] charArray)
-        {
-            Tile[,] newTileTable = new Tile[charArray[0].Length, charArray.Length];
-            for (int y = 0; y < charArray.Length; y++)
-            {
-                for (int x = 0; x < charArray[0].Length; x++)
-                {
-                    newTileTable[x, y] = new Tile(charArray[y][x], ConsoleColor.Gray);
-                }
-            }
-            return newTileTable;
-        }
-
     }
 }
 

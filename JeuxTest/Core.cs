@@ -1,72 +1,50 @@
 ﻿/*
- *      Author : Yanik Sweeney
+ *      Programmer : Yanik Sweeney
  *      Date of creation : 25/10/2018
- *      Latest update : 11/11/2018
+ *      Latest update : 18/11/2018
  * 
- */ 
+ */
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Input; // Nécéssite une référence dll
-using static System.ConsoleColor;
 using System.Threading;
-
+using System.Diagnostics;
 
 namespace AsciiEngine
 {
-    public class Core
+    public partial class Core : INodes
     {
 
-        public static string[] DefaultGraphics =
-        {
-            " ",
-            " "
-        };
-        public static string[] PlayerGraphic = {
-            " XXXXX ",
-            "XxOxXXX",
-            "0Xx   0",
-            "00x0x00",
-            " xXXXx ",
-        };
-        public static string[] AsteroidGraphic = {
-            "  AAAAAA  ",
-            " AAAAAAAAA",
-            " AAAAAAAAA",
-            "AAAAAAAAA ",
-            "  AAAAAAAA"
-        };
-
-        public static ConsoleColor[,] PlayerGraphicColorMatrix = {
-            { Gray, Blue, DarkRed , DarkRed, DarkRed, Blue, Gray },
-            { Gray, Blue, Blue, Blue, Blue, Blue, Gray },
-            { Gray, Gray, Blue, Blue, Blue, Blue, Gray },
-            { Gray, Gray, DarkRed, DarkRed, Gray, Gray, Gray },
-            { Gray, Gray, Blue, Blue, DarkRed, Gray, Gray }
-        };
 
         // Generates temp files.
-        public static int RenderMode = 2;
-        public static Vector2 ScreenSize = new Vector2((int)(Console.LargestWindowWidth / 1.5), (int)(Console.LargestWindowHeight / 1.5));
-        public static Core Engine = new Core();
-        //public static Systems.ScreenRenderer ScreenRenderer = new Systems.ScreenRenderer();
-        public static bool EndProcesses = false;
+        public static Core Engine;
 
-
-        public Renderer Renderer = new Renderer();
-        public Vector2 RenderingSize = new Vector2(Console.LargestWindowWidth, Console.LargestWindowHeight);
-        public PhysicsSpace PhysicsSpace = new PhysicsSpace();
-        public SystemsUpdate GameUpdate = new SystemsUpdate();
-        public Display Display = new Display();
-        public Camera Camera = new Camera();
-        public Input Input = new Input();
-        public bool ShowGameMetrics = true;
+        public Renderer Renderer;
+        public Vector2 RenderingSize;
+        public PhysicsSpace PhysicsSpace;
+        public CoreUpdate CoreUpdate;
+        public Display Display;
+        public Camera Camera;
+        public CoreInput Input;
         public Player player;
-        public int RenderType = 1;
+        public World World;
+
+        public bool isDisplayParallel = true;
+        public bool ShowGameMetrics = true;
+        public int RenderType = 0;
         public int ProcessorCoresCount;
+        public bool EndProcesses = false;
+        private Vector2 ScreenSize;
+        public long ElaspedTicks;
+        public static Stopwatch Time = Stopwatch.StartNew();
+        public List<INodes> Children { set; get; }
+        public INodes Parent { set; get; }
+
+        static void Main(string[] args)
+        {
+            Core Engine = new Core();
+            Engine.Update();
+        }
 
 
         void GameInit()
@@ -77,53 +55,113 @@ namespace AsciiEngine
             Console.SetWindowSize(ScreenSize.X, ScreenSize.Y);
             Console.CursorVisible = false;
             Camera.FitScreenSize();
-            player = new Player(PlayerGraphic, PlayerGraphicColorMatrix) { Position = new Vector2(0, 0) };
-            Camera.SetFocus(player);
-            PopulateAsteroids(700);
+            //player = new Player(PlayerGraphic, PlayerGraphicColorMatrix) { Position = new Vector2(0, 0) };
+            //Camera.SetFocus(player);
+            //PopulateAsteroids(8000);
+            //PopulateStardust(10000);
+            World.Initialize();
         }
 
-        //[STAThread]
-        static void Main(string[] args)
+        public Core()
         {
-            Engine.Processes();
+            Children = new List<INodes>();
+            Engine = this;
+            Renderer = new Renderer(Engine);
+            RenderingSize = new Vector2(Console.LargestWindowWidth, Console.LargestWindowHeight);
+            PhysicsSpace = new PhysicsSpace(Engine);
+            CoreUpdate = new CoreUpdate();
+            Display = new Display();
+            Camera = new Camera();
+            Input = new CoreInput();         
+            ScreenSize = new Vector2((int)(Console.LargestWindowWidth / 1.5), (int)(Console.LargestWindowHeight / 1.5));
+            World = new World(this);
         }
 
-        public void Processes()
+        public void Update()
         {
             GameInit();
             while (!EndProcesses)
             {
                 //Console.CursorVisible = false;
                 //Systems.Update.Process();
-                GameUpdate.Processes();
-                Thread.Sleep(1);
+                CoreUpdate.Processes();
+                if (Engine.CoreUpdate.DeltaTime <= 14.9)
+                    Thread.Sleep(1);
             }
         }
 
+        public void AddChild(INodes child)
+        {
+            Children.Add(child);
+        }
+
+        public void RemoveChild(INodes child)
+        {
+            Children.Remove(child);
+        }
+
+        public string[] GetAsteroidGraphic(int random)
+        {
+            string[] newGraphic;
+            switch (random)
+            {
+                case 1:
+                case 2:
+                case 3:
+                    newGraphic = AsteroidGraphic;
+                    break;
+                case 4:
+                case 5:
+                    newGraphic = AsteroidGraphic2;
+                    break;
+                case 7:
+                    newGraphic = AsteroidGraphic4;
+                    break;
+                default:
+                    newGraphic = AsteroidGraphic3;
+                    break;
+
+            }
+            return newGraphic;
+        }
 
         public void PopulateAsteroids(int amountAsteroids)
         {
             Random random = new Random();
             GameObject[] asteroids = new GameObject[amountAsteroids];
-            foreach(GameObject gameObject in asteroids)
+            foreach (GameObject gameObject in asteroids)
             {
-                Vector2 randomPosition = new Vector2(random.Next(-400, 400), random.Next(-400, 400));
-                while(randomPosition.X < 8 && randomPosition.X > -8 && randomPosition.Y < 8 && randomPosition.Y > -8)
+                Vector2 randomPosition = new Vector2(random.Next(-1200, 1200), random.Next(-1200, 1200));
+                while (randomPosition.X < 8 && randomPosition.X > -8 && randomPosition.Y < 8 && randomPosition.Y > -8)
                 {
-                    randomPosition = new Vector2(random.Next(-400, 400), random.Next(-400, 400));
+                    randomPosition = new Vector2(random.Next(-1200, 1200), random.Next(-1200, 1200));
                 }
-                PopulateAsteroid(randomPosition);
+                PopulateAsteroid(randomPosition, random);
             }
         }
 
-        void PopulateAsteroid(Vector2 position)
+        void PopulateAsteroid(Vector2 position, Random random)
         {
-            GameObject newAsteroid = new GameObject(AsteroidGraphic)
+
+            GameObject newAsteroid = new GameObject(GetAsteroidGraphic(random.Next(0, 8)))
             {
                 Position = position
             };
         }
 
+        void PopulateStardust(int amount)
+        {
+            var newList = new List<GameObject>();
+            Random random = new Random();
+            for (int i = 0; i < amount; i++)
+            {
+                GameObject newStardust = new GameObject();
+                newStardust.Initialize();
+                newStardust.Body = Tiles.GenerateByteArrayMap(StarDust);
+                newStardust.Graphics = new Graphics(newStardust);
+                newStardust.Position = (new Vector2(random.Next(-1200, 1200), random.Next(-1200, 1200)));
+            }
 
+        }
     }
 }

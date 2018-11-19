@@ -6,15 +6,16 @@ using System.Threading.Tasks;
 
 namespace AsciiEngine
 {
-    // INTERFACES
-    interface ITransform : IRotation, IPosition, ISize
-    {
 
+    public interface INodes
+    {     
+        List<INodes> Children { get; }
+        INodes Parent { set; get; }
+        void AddChild(INodes child);
+        void RemoveChild(INodes child);
+        void Update();
     }
-    interface IRotation
-    {
-        int Rotation { set; get; }
-    }
+    // INTERFACES
 
     interface IUpdate
     {
@@ -22,39 +23,16 @@ namespace AsciiEngine
     }
     interface IPosition
     {
-        Vector2 GetPosition();
-        void SetPosition(Vector2 newPosition);
-
+        Vector2 Position { set; get; }
     }
     interface ISize
     {
-        Vector2 GetSize();
+        Vector2 Size { get; }
     }
 
-
-    interface ICollision
-    {
-        bool[,] GetCollisionPoints();
-        CollisionShape GetCollisionShape();
-    }
-    interface IMove
-    {
-
-    }
-
-    interface IGraphics
-    {
-        Sprite GetFrame();
-        Vector2 GetFramePosition();
-
-    }
     interface IInput
     {
         void Input(System.Windows.Input.Keyboard keyboard);
     }
-    interface ISprite
-    {
-        Sprite SpriteGraphics { get; }
 
-    }
 }

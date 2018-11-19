@@ -6,70 +6,55 @@ using System.Threading.Tasks;
 
 namespace AsciiEngine
 {
-    public class CollisionShape : ISize
+    public class CollisionBody : ISize, INodes
     {
         // FIELDS //
-        private bool[,] collisionPoints;
-        private object parent;
-        private Vector2 velocity = new Vector2();
-        public Vector2 Velocity { set; get; }
+
+        private bool[,] parentCollisionMap;
+
+        public bool IsTrigger { get; }
+        public INodes Parent { set;  get; }
+        public List<INodes> Children { get; }
+        public bool this[int x, int y] => CollisionMap[x, y];
+        public Vector2 Size => new Vector2(parentCollisionMap.GetLength(0), parentCollisionMap.GetLength(1));
+        public bool[,] CollisionMap
+        {
+            get => parentCollisionMap;
+            set => parentCollisionMap = value;
+        }
+
+        public CollisionBody(INodes obj)
+        {
+            Parent = obj;
+            Parent.AddChild(this);
+            var parent = obj as GameObject;
+            parentCollisionMap = ByteMapToCollisionMap(parent.Body);
+            IsTrigger = parent.IsTrigger;
+        }
+
+        public void Update()
+        {
+            //CollisionMap = ByteMapToCollisionMap((Parent as GameObject).Graphics.ByteMap);
+            Core.Engine.PhysicsSpace.AddCollisionUpdateQuery(new CollisionUpdateSignal()
+            {
+                Source = Parent,
+                Position = (Parent as GameObject).Position,
+                CollisionMap = this.CollisionMap
+            });
+        }
+
+        public void UpdateCollisionMap()
+        {
+            CollisionMap = ByteMapToCollisionMap((Parent as GameObject).Graphics.ByteMap);
+        }
 
 
-        // PROPERTIES //
-        /// <summary>
-        /// The parent object is the object to which CollisionShape is linked.
-        /// </summary>
-        public object Parent => parent;
-        public bool this[int x, int y] => CollisionPoints[x, y];
-        /// <summary>
-        /// Represents a matrix of boolean values that indicate if the corresponding parent object has a physical
-        /// position in a give coordinate. 
-        /// </summary>
-        public bool[,] CollisionPoints => collisionPoints;
-        /// <summary>
-        /// A Vector2 that represents the size of the matrix.
-        /// </summary>
-        public Vector2 Size => new Vector2(collisionPoints.GetLength(0), collisionPoints.GetLength(1));
-        
-        public Vector2 GetSize()
-        {
-            return new Vector2(collisionPoints.GetLength(0), collisionPoints.GetLength(1));
-        }
-        // CONSTRUCTOR //
-        /// <summary>
-        /// A sprite graphic is necessary to generate a CollisionShape2. The constructor calls a method
-        /// to generate the points.
-        /// </summary>
-        /// <param name="graphic">A Sprite that represents the graphic of the parent object</param>
-        public CollisionShape(Sprite graphic)
-        {
-            collisionPoints = SpriteToCollisionMap(graphic);
-        }
-        /// <summary>
-        /// This is the default constructor that uses a generic object and interfaces with Graphics or Sprite to get
-        /// the collision points map. Also adds the generic object as parent.
-        /// </summary>
-        /// <param name="obj"></param>
-        public CollisionShape(object obj)
-        {
-            Sprite sprite;
-            if (obj is IGraphics graphics)
-                sprite = graphics.GetFrame();
-            else if (obj is ISprite _sprite)
-                sprite = _sprite.SpriteGraphics;
-            else
-                return;
 
-            collisionPoints = SpriteToCollisionMap(sprite);
-            parent = obj;
+        public bool CollisionDetection(Vector2 direction, out CollisionEventSignal signal)
+        {
+            return Core.Engine.PhysicsSpace.CheckCollision(Parent as GameObject, (Parent as IPosition).Position + direction, out signal);
         }
-        // METHOD //
-        /// <summary>
-        /// Returns a 2 dimensional array of boolean values. True means the CollisionShape has a no pass through point
-        /// at the corresponding array coordinates.
-        /// </summary>
-        /// <param name="sprite">Sprite that represents a graphic from which the method will build a CollisionShape2</param>
-        /// <returns></returns>
+
         private bool[,] SpriteToCollisionMap(Sprite sprite)
         {
             bool[,] points = new bool[sprite.Size.X, sprite.Size.Y];
@@ -77,13 +62,50 @@ namespace AsciiEngine
             {
                 for (int x = 0; x < sprite.Size.X; x++)
                 {
-                    if (sprite[x, y].Char != ' ')
+                    if (sprite[x, y] != 0)
                         points[x, y] = true;
                     else
                         points[x, y] = false;
                 }
             }
             return points;
+        }
+
+        private bool[,] ByteMapToCollisionMap(byte[,] newMatrix)
+        {
+            bool[,] points = new bool[newMatrix.GetLength(0), newMatrix.GetLength(1)];
+            for (int y = 0; y < newMatrix.GetLength(1); y++)
+            {
+                for (int x = 0; x < newMatrix.GetLength(0); x++)
+                {
+                    if (newMatrix[x, y] != 0)
+                        points[x, y] = true;
+                    else
+                        points[x, y] = false;
+                }
+            }
+            return points;
+        }
+        public void AddChild(INodes child)
+        {
+            Children.Add(child);
+        }
+
+        public void RemoveChild(INodes child)
+        {
+            Children.Remove(child);
+        }
+
+
+
+        public CollisionBody(Sprite graphic)
+        {
+            parentCollisionMap = SpriteToCollisionMap(graphic);
+        }
+
+        public CollisionBody(byte[,] byteMap)
+        {
+            parentCollisionMap = ByteMapToCollisionMap(byteMap);
         }
     }
 }

@@ -6,72 +6,47 @@ namespace AsciiEngine
     /// <summary>
     /// The class represents all object that inhabits the game space including entities, the player, projectiles, etc.
     /// </summary>
-    public class GameObject : IPosition, IEnumerable<GameObject>, IMove, ISize, IGraphics, ISprite, ICollision
+    public class GameObject : IPosition, ISize, INodes, IUpdate
     {
-
-        public delegate void ObjectPositionChangeEventHandler(object source, ObjectPositionEventArgs args);
-        public event ObjectPositionChangeEventHandler ObjectPositionChanged;
-
         static public List<GameObject> List = new List<GameObject>();
 
-        // FIELDS//
-        private Graphics graphics;
-        private Sprite spriteGraphics;
         private Vector2 position;
-        private CollisionShape collisionBody;
+        private Direction direction;
 
-        // PROPERTIES //
-
-        public bool[,] GetCollisionPoints()
-        {
-            return this.collisionBody.CollisionPoints;
-        }
-        public CollisionShape GetCollisionShape()
-        {
-            return collisionBody;
-        }
-
+        public bool IsTrigger { set; get; }       
+        public List<INodes> Children { set; get; }
+        public INodes Parent { set; get; }
+        public byte[,] Body { set; get; }
+        public Graphics Graphics { set; get; }
+        public CollisionBody CollisionBody { set; get; }
         public PhysicsBody PhysicsBody { set; get; }
- 
-        public Sprite SpriteGraphics
+        public GameStats GameStats { set; get; }
+        public VectorP Movement { set; get; }
+
+        public Direction FacingDirection
         {
-            get
-            {
-                if (spriteGraphics == null)
-                    spriteGraphics = new Sprite(Core.DefaultGraphics);
-                return spriteGraphics;
-            }
+            get => direction;
             set
             {
-                spriteGraphics = value;
+                direction = value;
+                Graphics.UpdateCache();
+                CollisionBody.UpdateCollisionMap();
             }
-        }
-
+        }   
         public Vector2 Size
         {
             get
             {
-                return this.SpriteGraphics.Size;
+                return new Vector2(this.Graphics.ByteMap.GetLength(0), Graphics.ByteMap.GetLength(1));
             }
-        }
-
-        public Vector2 GetSize()
-        {
-            return this.SpriteGraphics.GetSize();
         }
         public Vector2 Position
         {
             set
             {
-                //Core.Map.OnPositionUpdate(this, value);
-                if (position == null)
-                    position = new Vector2();
-                Vector2 oldPosition = position;    
-                
-                this.position = value;
-                if(this == Camera.Instance.ObjectFocused)
-                    Camera.Instance.NotifyCameraPositionChange(this, value);
-                OnObjectPositionChanged(oldPosition, value);
+                UpdatePosition(value);
+                PhysicsBody.Position.X = value.X;
+                PhysicsBody.Position.Y = value.Y;
             }
             get
             {
@@ -79,99 +54,70 @@ namespace AsciiEngine
                     position = new Vector2(0, 0);
                 return position;
             }
-
         }
 
-        public Vector2 GetPosition()
+        public void Initialize()
         {
-            if (position == null)
-                position = new Vector2(0, 0);
-            return position;
-        }
-        public void SetPosition(Vector2 newPosition)
-        {
-            if (position == null)
-                position = new Vector2();
-            Vector2 oldPosition = position;
-
-
-            this.position = newPosition;
-            if (this == Camera.Instance.ObjectFocused)
-                Camera.Instance.NotifyCameraPositionChange(this, newPosition);
-            OnObjectPositionChanged(oldPosition, newPosition);
-            PhysicsBody.Position.X = newPosition.X;
-            PhysicsBody.Position.Y = newPosition.Y;
-
-        }
-
-        public void SetPositionSpecial(Vector2 newPosition)
-        {
-            if (position == null)
-                position = new Vector2();
-            Vector2 oldPosition = position;
-
-
-            this.position = newPosition;
-            if (this == Camera.Instance.ObjectFocused)
-                Camera.Instance.NotifyCameraPositionChange(this, newPosition);
-            OnObjectPositionChanged(oldPosition, newPosition);
-
-        }
-        public Graphics Graphics => graphics;
-
-        public Sprite GetFrame()
-        {
-            return this.SpriteGraphics;
-        }
-
-        public Vector2 GetFramePosition()
-        {
-            return this.position;
-        }
-        private void Initialize()
-        {
-            List.Add(this);
-            graphics = new Graphics(this);
-            collisionBody = new CollisionShape(this);
+            //List.Add(this);
+            Children = new List<INodes>();
+            Graphics = new Graphics(this);
+            CollisionBody = new CollisionBody(this);
             PhysicsBody = new PhysicsBody(this);
-            
+            Movement = new VectorP();
+            GameStats = new GameStats(this);
         }
-
+        public GameObject()
+        {           
+            Body = Tiles.GenerateByteArrayMap(Core.DefaultGraphics);
+        }
         public GameObject(string[] asciiSprite)
         {
-            SpriteGraphics = new Sprite(asciiSprite);
+            Body = Tiles.GenerateByteArrayMap(asciiSprite);
             Initialize();
-            
-        }
 
+        }
         public GameObject(string[] asciiSprite, ConsoleColor[,] colorMatrix)
         {
-            SpriteGraphics = new Sprite(asciiSprite, colorMatrix);
+            Body = Tiles.GenerateByteArrayMap(asciiSprite, colorMatrix);
             Initialize();
         }
 
-        protected virtual void OnObjectPositionChanged(Vector2 oldPosition, Vector2 newPosition)
-        {
-            ObjectPositionChanged?.Invoke(this, new ObjectPositionEventArgs()
-            {
-                OldPosition = oldPosition,
-                NewPosition = newPosition,
-            });
+        public virtual void Update()
+        {          
+            CollisionBody.Update();
+            PhysicsBody.Update();
+            Graphics.Update();
+            GameStats.Update();
         }
 
-        public IEnumerator<GameObject> GetEnumerator()
+        public void UpdatePosition(Vector2 newPosition)
         {
-            for (int i = 0; i < List.Count; i++)
+            this.position = newPosition;
+            if((this.Parent as Chunk) != null)
             {
-                yield return List[i];
-            }
-        }
-        // Explicit interface implementation for nongeneric interface
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return GetEnumerator();
+                (this.Parent as Chunk).AddMovementQuery(this, newPosition);
+            }          
+            if (this == Camera.Instance.ObjectFocused)
+                Camera.Instance.NotifyCameraPositionChange(this, newPosition);
         }
 
+        public void AddChild(INodes child)
+        {
+            Children.Add(child);
+        }
+        public void RemoveChild(INodes child)
+        {
+            Children.Remove(child);
+        }
+
+        public void OnDeathEvent()
+        {
+            (Parent as Chunk).AddDeletionQuery(this);
+        }
+
+        public void OnCollisionEvent(CollisionEventSignal collisionEvent)
+        {
+
+        }
     }
- 
 }
