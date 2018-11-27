@@ -38,7 +38,7 @@ namespace AsciiEngine
         public void SetSize(Vector2 newSize)
         {
             size = newSize;
-            Core.Engine.Renderer.Update();
+            Engine.Instance.Renderer.Update();
         }
 
         public Vector2 Position
@@ -97,14 +97,6 @@ namespace AsciiEngine
                 position = objectFocused.Position + ObjectFocused.Size - Offset;
         }
 
-        /// <param name="args">Represents the old position of the object and its new position in space</param>
-        public void OnObjectFocusPositionChanged(object source, ObjectPositionEventArgs args)
-        {
-            Vector2 newObjectPosition = args.NewPosition;
-            Vector2 newCameraPosition = newObjectPosition + ObjectFocused.Size - Offset;
-
-            Position = newCameraPosition;
-        }
 
 
         public void NotifyCameraPositionChange(GameObject source, Vector2 newObjPosition)

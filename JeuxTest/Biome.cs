@@ -35,7 +35,6 @@ namespace AsciiEngine
 
     public class BiomeBalanced : Biome
     {
-
         public BiomeBalanced()
         {
             AsteroidDensity = 20;

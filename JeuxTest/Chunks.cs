@@ -43,11 +43,12 @@ namespace AsciiEngine
                 childrenList[i].Update();
             }
             ProcessMovementQueries();
+            ProcessDeletionQueries();
         }
 
         public void ProcessDeletionQueries()
         {
-            foreach(INodes child in DeletionQueries)
+            foreach (INodes child in DeletionQueries)
             {
                 child.Parent = null;
                 RemoveChild(child);
@@ -168,13 +169,27 @@ namespace AsciiEngine
 
         void PopulateAsteroid(Vector2 position, Random random)
         {
+            double newMass;
+            var newGraphic = GetAsteroidGraphic(random.Next(0, 8));
+            if (newGraphic == Core.AsteroidGraphic)
+                newMass = 5;
+            else if (newGraphic == Core.AsteroidGraphic2)
+                newMass = 2;
+            else if (newGraphic == Core.AsteroidGraphic3)
+                newMass = 2;
+            else if (newGraphic == Core.AsteroidGraphic4)
+                newMass = 20;
+            else
+                newMass = 200;
 
-            GameObject newAsteroid = new GameObject(GetAsteroidGraphic(random.Next(0, 8)))
+            GameObject newAsteroid = new GameObject(newGraphic)
             {
                 Position = position,
                 Parent = this,
+
             };
             Children.Add(newAsteroid as INodes);
+            newAsteroid.PhysicsBody.Mass = newMass;
         }
 
         void PopulateStardust(int amount, Vector2 chunkPosition)
@@ -193,7 +208,7 @@ namespace AsciiEngine
             newStardust.Initialize();
             //newStardust.SetSprite(Sprite.Generate(Core.StarDust));
             newStardust.Body = Tiles.GenerateByteArrayMap(Core.StarDust);
-            newStardust.Graphics = new Graphics(newStardust);
+            newStardust.Graphics = new ObjectGraphics(newStardust);
             newStardust.Position = (new Vector2(random.Next(chunkPosition.X, chunkPosition.X + Engine.ChunkSize.X),
                 random.Next(chunkPosition.Y, chunkPosition.Y + Engine.ChunkSize.Y)));
             newStardust.Parent = this;

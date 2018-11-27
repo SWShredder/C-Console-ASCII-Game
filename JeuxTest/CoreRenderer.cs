@@ -8,7 +8,7 @@ using static AsciiEngine.Utility;
 
 namespace AsciiEngine
 {
-    public class Renderer : ISize, INodes
+    public class CoreRenderer : ISize, INodes
     {
         // Single Buffer
         private ScreenBuffer singleBuffer = new ScreenBuffer();
@@ -43,7 +43,7 @@ namespace AsciiEngine
             }
         }
   
-        public Renderer(INodes parent)
+        public CoreRenderer(INodes parent)
         {
             Parent = parent;
             Parent.AddChild(this);
@@ -55,7 +55,7 @@ namespace AsciiEngine
         {
             //UpdateByteMapArray();
             ProcessRenderUpdateQueries();
-            UpdateScreenBufferAreas(Core.Engine.RenderType);
+            UpdateScreenBufferAreas(Engine.RenderType);
         }
 
         public void UpdateScreenBufferAreas(int renderType)
@@ -70,20 +70,20 @@ namespace AsciiEngine
 
         private void UpdateSingleScreenBuffer()
         {
-            Vector2 cameraRelativePosition = Core.Engine.Camera.GetPosition() - this.Position;
-            Vector2 bufferSize = Core.Engine.Camera.Size;
+            Vector2 cameraRelativePosition = Engine.Instance.Camera.GetPosition() - this.Position;
+            Vector2 bufferSize = Engine.Instance.Camera.Size;
             singleBuffer.Position = new Vector2();
             singleBuffer.DrawByteMapToBuffer(ByteMap, bufferSize, cameraRelativePosition);
         }
         private void UpdateDualScreenBuffers()
         {
-            Vector2 cameraRelativePosition = Core.Engine.Camera.GetPosition() - this.Position;
-            Vector2 topBufferSize = new Vector2(Core.Engine.Camera.Size.X, Core.Engine.Camera.Size.Y / 2);
-            Vector2 bottomBufferSize = new Vector2(Core.Engine.Camera.Size.X, Core.Engine.Camera.Size.Y / 2);
-            Vector2 bottomBufferRelativePosition = new Vector2(cameraRelativePosition.X, cameraRelativePosition.Y + (Core.Engine.Camera.Size.Y / 2));
+            Vector2 cameraRelativePosition = Engine.Instance.Camera.GetPosition() - this.Position;
+            Vector2 topBufferSize = new Vector2(Engine.Instance.Camera.Size.X, Engine.Instance.Camera.Size.Y / 2);
+            Vector2 bottomBufferSize = new Vector2(Engine.Instance.Camera.Size.X, Engine.Instance.Camera.Size.Y / 2);
+            Vector2 bottomBufferRelativePosition = new Vector2(cameraRelativePosition.X, cameraRelativePosition.Y + (Engine.Instance.Camera.Size.Y / 2));
 
             topBuffer.Position = new Vector2();
-            bottomBuffer.Position = (new Vector2(0, Core.Engine.Camera.Size.Y / 2));//Core.Engine.Camera.Size.Y - Core.Engine.Camera.Size.Y / 2));
+            bottomBuffer.Position = (new Vector2(0, Engine.Instance.Camera.Size.Y / 2));//Engine.Instance.Camera.Size.Y - Engine.Instance.Camera.Size.Y / 2));
             //cameraCanvas = RenderCameraArea();
             var renderTopBuffer = Task.Run(() => topBuffer.DrawByteMapToBuffer(ByteMap, topBufferSize, cameraRelativePosition));
             var renderBottomBuffer = Task.Run(
@@ -94,9 +94,9 @@ namespace AsciiEngine
 
         private void UpdateQuadrantScreenBuffers()
         {
-            Vector2 cameraRelativePosition = Core.Engine.Camera.GetPosition() - this.Position;
-            Vector2 topBufferSize = new Vector2(Core.Engine.Camera.Size.X / 2, Core.Engine.Camera.Size.Y / 2);
-            Vector2 bottomBufferSize = new Vector2(Core.Engine.Camera.Size.X / 2, Core.Engine.Camera.Size.Y / 2);
+            Vector2 cameraRelativePosition = Engine.Instance.Camera.GetPosition() - this.Position;
+            Vector2 topBufferSize = new Vector2(Engine.Instance.Camera.Size.X / 2, Engine.Instance.Camera.Size.Y / 2);
+            Vector2 bottomBufferSize = new Vector2(Engine.Instance.Camera.Size.X / 2, Engine.Instance.Camera.Size.Y / 2);
 
             Vector2 topLeftBufferRelativePosition = new Vector2(cameraRelativePosition.X, cameraRelativePosition.Y);
             Vector2 topRightBufferRelativePosition = new Vector2(cameraRelativePosition.X + topBufferSize.X, cameraRelativePosition.Y);
@@ -226,7 +226,7 @@ namespace AsciiEngine
 
         private Vector2 GetRenderAreaSize()
         {
-            Vector2 cameraSize = Core.Engine.Camera.Size;
+            Vector2 cameraSize = Engine.Instance.Camera.Size;//Engine.Instance.Camera.Size;
             Vector2 newSize = new Vector2((cameraSize.X * 2), (cameraSize.Y * 2));
             return newSize;
         }

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace AsciiEngine
 {
-    public class GameStats : INodes
+    public class ObjectStats : INodes
     {
         public double currentHealth;
         public double currentEnergy;
@@ -33,14 +33,14 @@ namespace AsciiEngine
         public double HealthRegenerationRate { set; get; }
         public double EnergyRegenerationRate { set; get; }
         public uint Mass { set; get; }
-        public uint ThrustPower { set; get; }
-        public uint Damage { set; get; }
-        public List<DamageQuery> DamageQueries { set; get; }
+        public double ThrustPower { set; get; }
+        public double Damage { set; get; }
+        public List<ObjectDamageSignal> DamageQueries { set; get; }
         public List<INodes> Children { set; get; }
         public INodes Parent { set; get; }
      
 
-        public GameStats(GameObject gameObject )
+        public ObjectStats(GameObject gameObject )
         {
             Health = 100;
             CurrentHealth = Health;
@@ -51,27 +51,30 @@ namespace AsciiEngine
             Mass = 10;
             ThrustPower = 0;
             Damage = 0;
-            DamageQueries = new List<DamageQuery>();
+            DamageQueries = new List<ObjectDamageSignal>();
             Children = new List<INodes>();
             Parent = gameObject as INodes;
         }
 
         public void Update()
         {
-            double delta = Core.Engine.CoreUpdate.DeltaTime / 1000.0;
+            double delta = Engine.Instance.CoreUpdate.DeltaTime / 1000.0;//Engine.Instance.CoreUpdate.DeltaTime / 1000.0;
             CurrentHealth += HealthRegenerationRate != 0 ? Health / HealthRegenerationRate * delta : 0;
             ProcessDamageQueries();
         }
 
-
+        public void AddDamageQuery(ObjectDamageSignal query)
+        {
+            this.CurrentHealth -= query.Damage;
+        }
 
         public void ProcessDamageQueries()
         {
-            foreach(DamageQuery query in DamageQueries)
+            foreach(ObjectDamageSignal query in DamageQueries)
             { 
                 CurrentHealth -= query.Damage;
             }
-            DamageQueries = new List<DamageQuery>();
+            DamageQueries = new List<ObjectDamageSignal>();
         }
 
 

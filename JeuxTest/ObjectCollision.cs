@@ -6,14 +6,12 @@ using System.Threading.Tasks;
 
 namespace AsciiEngine
 {
-    public class CollisionBody : ISize, INodes
+    public class ObjectCollision : ISize, INodes
     {
-        // FIELDS //
-
         private bool[,] parentCollisionMap;
 
         public bool IsTrigger { get; }
-        public INodes Parent { set;  get; }
+        public INodes Parent { set; get; }
         public List<INodes> Children { get; }
         public bool this[int x, int y] => CollisionMap[x, y];
         public Vector2 Size => new Vector2(parentCollisionMap.GetLength(0), parentCollisionMap.GetLength(1));
@@ -23,7 +21,7 @@ namespace AsciiEngine
             set => parentCollisionMap = value;
         }
 
-        public CollisionBody(INodes obj)
+        public ObjectCollision(INodes obj)
         {
             Parent = obj;
             Parent.AddChild(this);
@@ -34,8 +32,8 @@ namespace AsciiEngine
 
         public void Update()
         {
-            //CollisionMap = ByteMapToCollisionMap((Parent as GameObject).Graphics.ByteMap);
-            Core.Engine.PhysicsSpace.AddCollisionUpdateQuery(new CollisionUpdateSignal()
+
+            Engine.Instance.PhysicsSpace.AddCollisionUpdateQuery(new CollisionUpdateSignal()
             {
                 Source = Parent,
                 Position = (Parent as GameObject).Position,
@@ -49,10 +47,9 @@ namespace AsciiEngine
         }
 
 
-
-        public bool CollisionDetection(Vector2 direction, out CollisionEventSignal signal)
+        public bool CollisionDetection(Vector2 direction)
         {
-            return Core.Engine.PhysicsSpace.CheckCollision(Parent as GameObject, (Parent as IPosition).Position + direction, out signal);
+            return Engine.Instance.PhysicsSpace.CheckCollision(Parent as GameObject, (Parent as IPosition).Position + direction);
         }
 
         private bool[,] SpriteToCollisionMap(Sprite sprite)
@@ -96,14 +93,12 @@ namespace AsciiEngine
             Children.Remove(child);
         }
 
-
-
-        public CollisionBody(Sprite graphic)
+        public ObjectCollision(Sprite graphic)
         {
             parentCollisionMap = SpriteToCollisionMap(graphic);
         }
 
-        public CollisionBody(byte[,] byteMap)
+        public ObjectCollision(byte[,] byteMap)
         {
             parentCollisionMap = ByteMapToCollisionMap(byteMap);
         }

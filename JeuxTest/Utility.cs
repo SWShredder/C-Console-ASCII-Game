@@ -9,24 +9,37 @@ namespace AsciiEngine
 {
     public enum Direction
     {
-        North, South, East, West
+        North,
+        South,
+        East,
+        West,
     }
 
-    public class CollisionEventSignal
+
+    public enum ObjectType
     {
-        public DamageQuery DamageQuery;
-        public PhysicsImpactSignal ImpactSignal;
-    }
-    public class DamageQuery
-    {
-        public GameObject source;
-        public double Damage;
+        Particle,
+        Player, 
+        Agent,
     }
 
-    public class PhysicsImpactSignal
+
+    public abstract class ObjectSignal
     {
-        public VectorP CollisionVector;
-        public double ImpactForce;
+    
+    }
+
+    public class ObjectDamageSignal : ObjectSignal
+    {
+        public GameObject source { set; get; }
+        public double Damage { set; get; }
+    }
+
+    public class ObjectPhysicsSignal : ObjectSignal
+    {
+        public double CollisionVectorX { set; get; }
+        public double CollisionVectorY { set; get; }
+        public double Force { set; get; }
     }
 
     public class RenderUpdateSignal
@@ -53,66 +66,23 @@ namespace AsciiEngine
         public Vector2 NewChunkPosition;
     }
 
-    public class CameraPositionEventArgs : EventArgs
-    {
-        public Vector2 OldPosition { set; get; }
-        public Vector2 NewPosition { set; get; }
-        public Vector2 Size { set; get; }
-    }
-
-    public class DrawRequestEventArgs : EventArgs
-    {
-        public Vector2 OldPosition { set; get; }
-        public Vector2 NewPosition { set; get; }
-        public Sprite Sprite { set; get; }
-
-    }
-
-    public class ObjectPositionEventArgs : EventArgs
-    {
-        public Vector2 OldPosition { set; get; }
-        public Vector2 NewPosition { set; get; }
-    }
-
     static public class Utility
     {
-        public static bool GetRotated90degreeMatrix(byte[,] matrix, out byte[,] newByteArray)
+        public static bool GetRotated90DegreeMatrix<T>(T[,] matrix, out T[,] newTMatrix)
         {
-            if (matrix == null)
+            if(matrix == null)
             {
-                newByteArray = new byte[0, 0];
+                newTMatrix = new T[0, 0];
                 return false;
             }
-                
-            newByteArray = new byte[matrix.GetLength(1), matrix.GetLength(0)];
-            int indexY = matrix.GetLength(1);
-            for(int x = 0; x < matrix.GetLength(1); ++x)
-            {
-                --indexY;
-                for(int y = 0; y < matrix.GetLength(0); ++y)
-                {
-                    newByteArray[x, y] = matrix[y, indexY];
-                }
-            }
-            return true;
-        }
-
-        public static bool GetRotated90DegreeMatrix(bool[,] matrix, out bool[,] newBoolArray)
-        {
-            if (matrix == null)
-            {
-                newBoolArray = new bool[0, 0];
-                return false;
-            }
-
-            newBoolArray = new bool[matrix.GetLength(1), matrix.GetLength(0)];
+            newTMatrix = new T[matrix.GetLength(1), matrix.GetLength(0)];
             int indexY = matrix.GetLength(1);
             for (int x = 0; x < matrix.GetLength(1); ++x)
             {
                 --indexY;
                 for (int y = 0; y < matrix.GetLength(0); ++y)
                 {
-                    newBoolArray[x, y] = matrix[y, indexY];
+                    newTMatrix[x, y] = matrix[y, indexY];
                 }
             }
             return true;
@@ -128,14 +98,15 @@ namespace AsciiEngine
         }
         public static long GetEngineTicks()
         {
-            return Core.Engine.CoreUpdate.EngineTicks;
+            return Engine.Instance.CoreUpdate.EngineTicks;
         }
 
+        public static double GetDeltaTime()
+        {
+            return Engine.Instance.CoreUpdate.DeltaTime;
+        }
     }
-
- 
-
-    
+  
     public class VectorP
     {
         public double X;
@@ -160,6 +131,12 @@ namespace AsciiEngine
         public static VectorP operator +(VectorP vec1, VectorP vec2)
         {
             return new VectorP(vec1.X + vec2.X, vec1.Y + vec2.Y);
+        }
+
+        public override string ToString()
+        {
+            string newString = String.Format("({0:N3};{1:N3})", this.X, this.Y);
+            return newString;
         }
     }
 

@@ -8,11 +8,13 @@ using static AsciiEngine.Utility;
 namespace AsciiEngine
 {
 
-    public class Graphics : INodes
+    public class ObjectGraphics : INodes
     {
         private byte[,] parentByteMapArray;
         private byte[,] cacheByteMapArray;
 
+        public List<Animation> CurrentAnimations { set; get; }
+        public bool IsVisible { set; get; }
         public INodes Parent { set; get; }
         public List<INodes> Children { set; get; }
         public byte[,] ByteMap
@@ -23,11 +25,13 @@ namespace AsciiEngine
             }
         }
 
-        public Graphics(INodes parent)
+        public ObjectGraphics(INodes parent)
         {
             Parent = parent;
             this.parentByteMapArray = (Parent as GameObject).Body;
             this.cacheByteMapArray = this.parentByteMapArray;
+            this.CurrentAnimations = new List<Animation>();
+            this.IsVisible = true;
         }
 
         public void UpdateCache()
@@ -44,21 +48,21 @@ namespace AsciiEngine
         {
             var array = parentByteMapArray;
             switch (degree)
-            {           
+            {
                 case 90:
-                    Utility.GetRotated90degreeMatrix(parentByteMapArray, out cacheByteMapArray);
+                    Utility.GetRotated90DegreeMatrix<byte>(parentByteMapArray, out cacheByteMapArray);
                     break;
-                case 180:                  
-                    Utility.GetRotated90degreeMatrix(array, out cacheByteMapArray);
+                case 180:
+                    Utility.GetRotated90DegreeMatrix<byte>(parentByteMapArray, out cacheByteMapArray);
                     array = cacheByteMapArray;
-                    Utility.GetRotated90degreeMatrix(array, out cacheByteMapArray);
+                    Utility.GetRotated90DegreeMatrix<byte>(cacheByteMapArray, out cacheByteMapArray);
                     break;
                 case 270:
-                    Utility.GetRotated90degreeMatrix(array, out cacheByteMapArray);
+                    Utility.GetRotated90DegreeMatrix<byte>(parentByteMapArray, out cacheByteMapArray);
                     array = cacheByteMapArray;
-                    Utility.GetRotated90degreeMatrix(array, out cacheByteMapArray);
+                    Utility.GetRotated90DegreeMatrix<byte>(cacheByteMapArray, out cacheByteMapArray);
                     array = cacheByteMapArray;
-                    Utility.GetRotated90degreeMatrix(array, out cacheByteMapArray);
+                    Utility.GetRotated90DegreeMatrix<byte>(cacheByteMapArray, out cacheByteMapArray);
                     break;
                 default:
                     cacheByteMapArray = parentByteMapArray;
@@ -68,11 +72,16 @@ namespace AsciiEngine
 
         public void Update()
         {
-            Core.Engine.Renderer.AddRenderUpdateQuery(new RenderUpdateSignal()
+            ProcessAnimations();   
+            if (IsVisible)
             {
-                ByteMap = this.ByteMap,
-                Position = (Parent as GameObject).Position
-            });
+                Engine.Instance.Renderer.AddRenderUpdateQuery(new RenderUpdateSignal()
+                {
+                    ByteMap = this.ByteMap,
+                    Position = (Parent as GameObject).Position
+                });
+            }
+
         }
 
         public void AddChild(INodes child)
@@ -83,6 +92,25 @@ namespace AsciiEngine
         public void RemoveChild(INodes child)
         {
             Children.Remove(child);
+        }
+
+        public void AddAnimation(Animation animation)
+        {
+            CurrentAnimations.Add(animation);
+        }
+
+        public void ProcessAnimations()
+        {
+            for(int i = 0; i < CurrentAnimations.Count; ++i)
+            {
+                CurrentAnimations[i].Update();
+                if (CurrentAnimations[i].IsFinished)
+                {
+                    CurrentAnimations.RemoveAt(i);
+                    --i;
+                }
+            }
+
         }
     }
 }

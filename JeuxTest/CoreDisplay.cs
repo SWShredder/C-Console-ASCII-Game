@@ -6,20 +6,19 @@ using System.Threading.Tasks;
 
 namespace AsciiEngine
 {
-    public class Display
+    public class CoreDisplay
     {
         private List<Task> threadList = new List<Task>();
 
-
         public async void Update()
         {
-            long ticks = Core.Engine.CoreUpdate.EngineTicks;
-            UpdateDisplayManager(Core.Engine.RenderType);
-            if(Core.Engine.isDisplayParallel)
+            long ticks = Engine.Instance.CoreUpdate.EngineTicks;
+            UpdateDisplayManager(Engine.RenderType);
+            if(Engine.isDisplayParallel)
                 await Task.WhenAll(threadList.ToArray());
             else
                 Task.WaitAll(threadList.ToArray());
-            Core.Engine.CoreUpdate.DeltaTimeDisplay = 1.0 * (Core.Engine.CoreUpdate.EngineTicks - ticks) / Core.Engine.CoreUpdate.TicksResolution * 1000.0;
+            Engine.Instance.CoreUpdate.DeltaTimeDisplay = 1.0 * (Engine.Instance.CoreUpdate.EngineTicks - ticks) / Engine.Instance.CoreUpdate.TicksResolution * 1000.0;
         }
 
         public void UpdateDisplayManager(int renderType)
@@ -36,7 +35,7 @@ namespace AsciiEngine
         private void SingleBufferDisplay()
         {
             List<Task> newThreadList = new List<Task>();
-            var render = Task.Run(() => Core.Engine.Renderer.GetSingleScreenBuffer().Draw());
+            var render = Task.Run(() => Engine.Instance.Renderer.GetSingleScreenBuffer().Draw());
             newThreadList.Add(render);
             this.threadList = newThreadList;
         }
@@ -45,8 +44,8 @@ namespace AsciiEngine
         {
             List<Task> newThreadList = new List<Task>();
 
-            var renderTop = Task.Run(() => Core.Engine.Renderer.GetTopScreenBuffer().Draw());
-            var renderBottom = Task.Run(() => Core.Engine.Renderer.GetBottomScreenBuffer().Draw());
+            var renderTop = Task.Run(() => Engine.Instance.Renderer.GetTopScreenBuffer().Draw());
+            var renderBottom = Task.Run(() => Engine.Instance.Renderer.GetBottomScreenBuffer().Draw());
 
             newThreadList.Add(renderTop);
             newThreadList.Add(renderBottom);
@@ -58,10 +57,10 @@ namespace AsciiEngine
         {
             List<Task> newThreadList = new List<Task>();
 
-            var renderLeftTop = Task.Run(() => Core.Engine.Renderer.GetQuadrantScreenBuffer(0).Draw());
-            var renderLeftBottom = Task.Run(() => Core.Engine.Renderer.GetQuadrantScreenBuffer(1).Draw());
-            var renderRightTop = Task.Run(() => Core.Engine.Renderer.GetQuadrantScreenBuffer(2).Draw());
-            var renderRightBottom = Task.Run(() => Core.Engine.Renderer.GetQuadrantScreenBuffer(3).Draw());
+            var renderLeftTop = Task.Run(() => Engine.Instance.Renderer.GetQuadrantScreenBuffer(0).Draw());
+            var renderLeftBottom = Task.Run(() => Engine.Instance.Renderer.GetQuadrantScreenBuffer(1).Draw());
+            var renderRightTop = Task.Run(() => Engine.Instance.Renderer.GetQuadrantScreenBuffer(2).Draw());
+            var renderRightBottom = Task.Run(() => Engine.Instance.Renderer.GetQuadrantScreenBuffer(3).Draw());
 
             newThreadList.Add(renderLeftTop);
             newThreadList.Add(renderLeftBottom);
