@@ -9,6 +9,16 @@ namespace AsciiEngine
 {
     partial class Core
     {
+        public static string[] ThrusterParticles =
+        {
+            "+"
+        };
+
+        public static ConsoleColor[,] ThrusterParticlesColorMatrix =
+        {
+            { DarkRed }
+        };
+
         public static string[] Missile =
         {
             "."

@@ -9,7 +9,7 @@ namespace AsciiEngine
 {
     public class CoreUpdate
     {
-        public long EngineTicks => Core.Time.ElapsedTicks;
+        public long EngineTicks => Engine.Timer.ElapsedTicks;
         public long TicksResolution = Stopwatch.Frequency;
         public double DeltaTime;
 
@@ -18,8 +18,8 @@ namespace AsciiEngine
         public int FrameRate = 60;
         public int FixedProcessUPS = 60;
 
-        private long fixedProcessTicks = Core.Time.ElapsedTicks;
-        private long displayProcessTicks = Core.Time.ElapsedTicks;
+        private long fixedProcessTicks = Engine.Timer.ElapsedTicks;
+        private long displayProcessTicks = Engine.Timer.ElapsedTicks;
 
 
         private int metricsCounter = 0;
@@ -47,31 +47,31 @@ namespace AsciiEngine
                 renderUpdateMetrics /= 60;
                 displayUpdateMetrics /= 60;
 
-                if (!Core.Engine.ShowGameMetrics) return;
+                if (!Engine.ShowGameMetrics) return;
 
                 Console.SetCursorPosition(0, Console.WindowHeight - 2);
                 Console.Write("Update : {0:N3}ms    GameObjects : {1:N3}ms    Physics : {2:N3}ms    Rendering : {3:N3}ms    " +
-                    "Display : {4:N3}ms       RenderType : {5}    ",
+                    "Display : {4:N3}ms       RenderType : {5}     ExternalForces : {6} ",
                    DeltaTime, objDelta, physicsDelta, renderDelta, DeltaTimeDisplay,
-                   Core.Engine.RenderType, FrameRate);
+                   Engine.RenderType, World.Player.PhysicsBody.ExternalForce);
 
             }
 
-            if (!Core.Engine.ShowGameMetrics) return;
+            if (!Engine.ShowGameMetrics) return;
 
             Console.SetCursorPosition(0, Console.WindowHeight - 1);
             Console.Write(
-                "PlayerBiomePosition : {0}   Camera Area : {1}:{2}    Velocity : {3:N3};{5:N3}" +
-                "      PhysicsPosition: {4:N3};{6:N3}    BiomeType: {7}   BiomePosition: {8}      ",
-                (World.Player.Parent as Chunk).Position,
-                Core.Engine.Camera.Position,
-                Core.Engine.Camera.Position + Core.Engine.Camera.Size,
+                "PlayerPosition : {0}   Camera Area : {1}:{2}    Velocity : {3:N3};{5:N3}" +
+                "      PhysicsPosition: {4:N3};{6:N3}    BiomeType: {7}   BiomePosition: {8}         ",
+                World.Player.Position,
+                Engine.Instance.Camera.Position,
+                Engine.Instance.Camera.Position + Engine.Instance.Camera.Size,
                 World.Player.PhysicsBody.Velocity.X,
                 World.Player.PhysicsBody.Position.X,
                 World.Player.PhysicsBody.Velocity.Y,
                 World.Player.PhysicsBody.Position.Y,
                 (World.Instance.Children[4] as Chunk).Biome.Type,
-                (World.Instance.Children[4] as Chunk).Position
+                (World.Instance.Children[4] as Chunk).Position               
                 );
         }
 
@@ -89,13 +89,14 @@ namespace AsciiEngine
         }
         private void UpdateDisplay()
         {
-            Core.Engine.Display.Update();
+            //Engine.Instance.Display.Update();
+            Engine.Instance.Display.Update();
         }
 
         private void UpdateFixedProcesses()
         {
-            Vector2 renderingPosition = Core.Engine.Renderer.Position;
-            Vector2 renderingSize = Core.Engine.Renderer.Size;
+            Vector2 renderingPosition = Engine.Instance.Renderer.Position;//Engine.Instance.Renderer.Position;
+            Vector2 renderingSize = Engine.Instance.Renderer.Size;//Engine.Instance.Renderer.Size;
 
             long ticks = EngineTicks;
             /*foreach (GameObject obj in GameObject.List)
@@ -109,10 +110,12 @@ namespace AsciiEngine
             World.Instance.Update();
             double deltaTimeObject = 1.0 * (EngineTicks - ticks) / TicksResolution * 1000.0;
             ticks = EngineTicks;
-            Core.Engine.PhysicsSpace.Update();
+            //Engine.Instance.PhysicsSpace.Update();
+            Engine.Instance.PhysicsSpace.Update();
             double deltaTimePhysics = 1.0 * (EngineTicks - ticks) / TicksResolution * 1000.0;
             ticks = EngineTicks;
-            Core.Engine.Renderer.Update();
+            //Engine.Instance.Renderer.Update();
+            Engine.Instance.Renderer.Update();
             double deltaTimeRender = 1.0 * (EngineTicks - ticks) / TicksResolution * 1000.0;
 
 

@@ -44,7 +44,8 @@ namespace AsciiEngine
             var playerChunk = GetChunk(Player.Position);
             Player.Parent = playerChunk;
             playerChunk.AddChild(Player);
-            Core.Engine.Camera.SetFocus(Player);
+            Engine.Instance.Camera.FitScreenSize();
+            Engine.Instance.Camera.SetFocus(Player);
             UpdateChildrenList();
         }
 

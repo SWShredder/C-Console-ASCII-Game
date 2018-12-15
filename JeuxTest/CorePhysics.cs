@@ -6,10 +6,9 @@ using System.Threading.Tasks;
 
 namespace AsciiEngine
 {
-    public class PhysicsSpace : ISize, INodes
+    public class CorePhysics : ISize, INodes
     {
         private Dictionary<Vector2, GameObject> PhysicsBodyDictionary;
-
         public INodes Parent { set; get; }
         public List<INodes> Children { set; get; }
         public bool[,] CollisionMap { private set; get; }
@@ -27,11 +26,11 @@ namespace AsciiEngine
         {
             get
             {
-                return Core.Engine.RenderingSize;
+                return Engine.Instance.RenderingSize;
             }
         }
 
-        public PhysicsSpace(INodes parent)
+        public CorePhysics(INodes parent)
         {
             Parent = parent;
             Parent.AddChild(this);
@@ -41,21 +40,20 @@ namespace AsciiEngine
 
         public void Update()
         {
-            //CollisionMap = RenderCollisionMap(out PhysicsBodyDictionary);
             CollisionMap = ProcessCollisionUpdateQueries();
         }
-    
-        
-        public bool CheckCollision(GameObject source, Vector2 targetPosition, out CollisionEventSignal collisionEvent)
+
+
+        public bool CheckCollision(GameObject source, Vector2 targetPosition)
         {
-            CollisionBody collisionBody = source.CollisionBody;
-            Vector2 relativeTargetPosition = targetPosition - this.Position;
-            int relativeTargetPositionX = relativeTargetPosition.X;
-            int relativeTargetPositionY = relativeTargetPosition.Y;
+            if (CollisionMap == null) return false;
+            Vector2 thisPosition = this.Position;
+            Vector2 eventTargetPosition = targetPosition;
+            ObjectCollision collisionBody = source.CollisionBody;
+            int relativeTargetPositionX = eventTargetPosition.X - thisPosition.X;
+            int relativeTargetPositionY = eventTargetPosition.Y - thisPosition.Y;
             int collisionBodySizeX = collisionBody.Size.X;
             int collisionBodySizeY = collisionBody.Size.Y;
-
-            collisionEvent = null;
 
             for (int x = 0; x < collisionBodySizeX; ++x)
             {
@@ -63,16 +61,16 @@ namespace AsciiEngine
                 {
                     if (collisionBody[x, y])
                     {
-                        if (CollisionMap == null) return false;
+
                         if (x + relativeTargetPositionX >= CollisionMap.GetLength(0) || y + relativeTargetPositionY >= CollisionMap.GetLength(1)) return false;
-                        if (x + relativeTargetPositionX < 0 || y + relativeTargetPosition.Y < 0) return false;
+                        if (x + relativeTargetPositionX < 0 || y + relativeTargetPositionY < 0) return false;
                         if (CollisionMap[x + relativeTargetPositionX, y + relativeTargetPositionY])
                         {
-                            Vector2 relativePositionAdjusted = new Vector2(x + targetPosition.X, y + targetPosition.Y);
-                            PhysicsBodyDictionary.TryGetValue(relativePositionAdjusted, out GameObject targetObject);
-                            if (targetObject != source)
+                            Vector2 collisionPoints = new Vector2(x + targetPosition.X, y + targetPosition.Y);
+                            PhysicsBodyDictionary.TryGetValue(collisionPoints, out GameObject targetObject);
+                            if (targetObject != source && targetObject != null)
                             {
-                                collisionEvent = GenerateCollisionEvent(source, targetObject);
+                                GenerateCollisionEvents(source, targetObject, collisionPoints);
                                 return true;
                             }
 
@@ -81,24 +79,58 @@ namespace AsciiEngine
                     }
                 }
             }
-            collisionEvent = null;
             return false;
         }
-        
-        private CollisionEventSignal GenerateCollisionEvent(GameObject source, GameObject target)
-        {
-            var newCollisionEvent = new CollisionEventSignal()
-            {
-                DamageQuery = new DamageQuery(),
-                ImpactSignal = new PhysicsImpactSignal()
-            };
-            if (source.IsTrigger)
-                newCollisionEvent.DamageQuery.Damage = source.GameStats.Damage;
-            else
-                newCollisionEvent.DamageQuery = null;
 
-            return newCollisionEvent;
+        private void GenerateCollisionEvents(GameObject source, GameObject target, Vector2 collisionPoints)
+        {
+            double sourceVelocityX = source.PhysicsBody.Velocity.X;
+            double sourceVelocityY = source.PhysicsBody.Velocity.Y;
+            double targetVelocityX = target.PhysicsBody.Velocity.X;
+            double targetVelocityY = target.PhysicsBody.Velocity.Y;
+
+            double collisionVectorX = targetVelocityX - sourceVelocityX;
+            double collisionVectorY = targetVelocityY - sourceVelocityY;
+            double force;
+
+            if (collisionVectorX == 0 || collisionVectorY == 0)
+                force = Math.Pow((collisionVectorX + collisionVectorY), 2) * 0.5 * source.PhysicsBody.Mass;
+            else
+                force = Math.Pow((Math.Abs(collisionVectorX) + Math.Abs(collisionVectorY)) / 2, 2) * 0.5 * source.PhysicsBody.Mass;
+
+            GetNormalizedVector(ref collisionVectorX, ref collisionVectorY);
+
+
+            double targetForceImpact = force / target.PhysicsBody.Mass / (force / target.PhysicsBody.Mass + 1) * force;
+            double sourceForceImpact = force - targetForceImpact;
+
+
+            source.AddObjectSignalQuery(new ObjectPhysicsSignal()
+            {
+                CollisionVectorX = collisionVectorX,
+                CollisionVectorY = collisionVectorY,
+                Force = sourceForceImpact
+            });
+
+            target.AddObjectSignalQuery(new ObjectPhysicsSignal()
+            {
+                CollisionVectorX = collisionVectorX * -1,
+                CollisionVectorY = collisionVectorY * -1,
+                Force = targetForceImpact
+            });
         }
+
+        private void GetNormalizedVector(ref double x, ref double y)
+        {
+            if (x > 0) x = 0.5;
+            else if (x < 0) x = -0.5;
+            else x = 0;
+
+            if (y > 0) y = 0.5;
+            else if (y < 0) y = -0.5;
+            else y = 0;
+        }
+
 
         private bool[,] RenderCollisionMap(out Dictionary<Vector2, GameObject> dict)
         {
@@ -139,7 +171,7 @@ namespace AsciiEngine
             }
             return newCollisionMap;
         }
-       
+
         private bool[,] ProcessCollisionUpdateQueries()
         {
             var queries = CollisionUpdateQueries;
@@ -186,7 +218,7 @@ namespace AsciiEngine
             CollisionUpdateQueries = new List<CollisionUpdateSignal>();
             return newCollisionMap;
         }
-        
+
         public void AddCollisionUpdateQuery(CollisionUpdateSignal query)
         {
             CollisionUpdateQueries.Add(query);

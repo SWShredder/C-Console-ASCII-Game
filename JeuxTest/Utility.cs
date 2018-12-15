@@ -12,21 +12,24 @@ namespace AsciiEngine
         North, South, East, West
     }
 
-    public class CollisionEventSignal
+
+
+    public abstract class ObjectSignal
     {
-        public DamageQuery DamageQuery;
-        public PhysicsImpactSignal ImpactSignal;
-    }
-    public class DamageQuery
-    {
-        public GameObject source;
-        public double Damage;
+    
     }
 
-    public class PhysicsImpactSignal
+    public class ObjectStatsSignal : ObjectSignal
     {
-        public VectorP CollisionVector;
-        public double ImpactForce;
+        public GameObject source { set; get; }
+        public double Damage { set; get; }
+    }
+
+    public class ObjectPhysicsSignal : ObjectSignal
+    {
+        public double CollisionVectorX { set; get; }
+        public double CollisionVectorY { set; get; }
+        public double Force { set; get; }
     }
 
     public class RenderUpdateSignal
@@ -51,27 +54,6 @@ namespace AsciiEngine
     {
         public INodes Source;
         public Vector2 NewChunkPosition;
-    }
-
-    public class CameraPositionEventArgs : EventArgs
-    {
-        public Vector2 OldPosition { set; get; }
-        public Vector2 NewPosition { set; get; }
-        public Vector2 Size { set; get; }
-    }
-
-    public class DrawRequestEventArgs : EventArgs
-    {
-        public Vector2 OldPosition { set; get; }
-        public Vector2 NewPosition { set; get; }
-        public Sprite Sprite { set; get; }
-
-    }
-
-    public class ObjectPositionEventArgs : EventArgs
-    {
-        public Vector2 OldPosition { set; get; }
-        public Vector2 NewPosition { set; get; }
     }
 
     static public class Utility
@@ -128,7 +110,7 @@ namespace AsciiEngine
         }
         public static long GetEngineTicks()
         {
-            return Core.Engine.CoreUpdate.EngineTicks;
+            return Engine.Instance.CoreUpdate.EngineTicks;
         }
 
     }
@@ -160,6 +142,12 @@ namespace AsciiEngine
         public static VectorP operator +(VectorP vec1, VectorP vec2)
         {
             return new VectorP(vec1.X + vec2.X, vec1.Y + vec2.Y);
+        }
+
+        public override string ToString()
+        {
+            string newString = String.Format("({0:N3};{1:N3})", this.X, this.Y);
+            return newString;
         }
     }
 

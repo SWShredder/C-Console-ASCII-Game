@@ -8,7 +8,7 @@ using static AsciiEngine.Utility;
 namespace AsciiEngine
 {
 
-    public class Graphics : INodes
+    public class ObjectGraphics : INodes
     {
         private byte[,] parentByteMapArray;
         private byte[,] cacheByteMapArray;
@@ -23,7 +23,7 @@ namespace AsciiEngine
             }
         }
 
-        public Graphics(INodes parent)
+        public ObjectGraphics(INodes parent)
         {
             Parent = parent;
             this.parentByteMapArray = (Parent as GameObject).Body;
@@ -44,11 +44,11 @@ namespace AsciiEngine
         {
             var array = parentByteMapArray;
             switch (degree)
-            {           
+            {
                 case 90:
                     Utility.GetRotated90degreeMatrix(parentByteMapArray, out cacheByteMapArray);
                     break;
-                case 180:                  
+                case 180:
                     Utility.GetRotated90degreeMatrix(array, out cacheByteMapArray);
                     array = cacheByteMapArray;
                     Utility.GetRotated90degreeMatrix(array, out cacheByteMapArray);
@@ -68,11 +68,17 @@ namespace AsciiEngine
 
         public void Update()
         {
-            Core.Engine.Renderer.AddRenderUpdateQuery(new RenderUpdateSignal()
+            /*Engine.Instance.Renderer.AddRenderUpdateQuery(new RenderUpdateSignal()
+            {
+                ByteMap = this.ByteMap,
+                Position = (Parent as GameObject).Position
+            });*/
+            Engine.Instance.Renderer.AddRenderUpdateQuery(new RenderUpdateSignal()
             {
                 ByteMap = this.ByteMap,
                 Position = (Parent as GameObject).Position
             });
+
         }
 
         public void AddChild(INodes child)

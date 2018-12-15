@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using System.Linq;
 using System.Collections.Generic;
 namespace AsciiEngine
 {
@@ -13,33 +14,24 @@ namespace AsciiEngine
         private Vector2 position;
         private Direction direction;
 
-        public bool IsTrigger { set; get; }       
+        public bool HasCollision { set; get; }
+        public bool HasCollided { set; get; }
+        public bool IsTrigger { set; get; }
         public List<INodes> Children { set; get; }
         public INodes Parent { set; get; }
         public byte[,] Body { set; get; }
-        public Graphics Graphics { set; get; }
-        public CollisionBody CollisionBody { set; get; }
-        public PhysicsBody PhysicsBody { set; get; }
-        public GameStats GameStats { set; get; }
+        public ObjectGraphics Graphics { set; get; }
+        public ObjectCollision CollisionBody { set; get; }
+        public ObjectPhysics PhysicsBody { set; get; }
+        public ObjectStats GameStats { set; get; }
         public VectorP Movement { set; get; }
-
+        public List<ObjectSignal> ObjectSignalQueries { set; get; }
         public Direction FacingDirection
         {
             get => direction;
-            set
-            {
-                direction = value;
-                Graphics.UpdateCache();
-                CollisionBody.UpdateCollisionMap();
-            }
-        }   
-        public Vector2 Size
-        {
-            get
-            {
-                return new Vector2(this.Graphics.ByteMap.GetLength(0), Graphics.ByteMap.GetLength(1));
-            }
+            set => UpdateFacingDirection(value);
         }
+        public Vector2 Size => new Vector2(this.Graphics.ByteMap.GetLength(0), Graphics.ByteMap.GetLength(1));
         public Vector2 Position
         {
             set
@@ -58,16 +50,19 @@ namespace AsciiEngine
 
         public void Initialize()
         {
-            //List.Add(this);
             Children = new List<INodes>();
-            Graphics = new Graphics(this);
-            CollisionBody = new CollisionBody(this);
-            PhysicsBody = new PhysicsBody(this);
+            Graphics = new ObjectGraphics(this);
+            CollisionBody = new ObjectCollision(this);
+            PhysicsBody = new ObjectPhysics(this);
             Movement = new VectorP();
-            GameStats = new GameStats(this);
+            GameStats = new ObjectStats(this);
+            IsTrigger = false;
+            ObjectSignalQueries = new List<ObjectSignal>();
+            HasCollision = true;
         }
+
         public GameObject()
-        {           
+        {
             Body = Tiles.GenerateByteArrayMap(Core.DefaultGraphics);
         }
         public GameObject(string[] asciiSprite)
@@ -83,20 +78,34 @@ namespace AsciiEngine
         }
 
         public virtual void Update()
-        {          
-            CollisionBody.Update();
+        {
+            ProcessObjectSignalQueries();
+            if (HasCollision) CollisionBody.Update();
             PhysicsBody.Update();
             Graphics.Update();
             GameStats.Update();
+            foreach (INodes child in Children)
+            {
+                if (child as GameObject != null)
+                    child.Update();
+            }
+        }
+
+        public void UpdateFacingDirection(Direction direction)
+        {
+
+            this.direction = direction;
+            Graphics.UpdateCache();
+            CollisionBody.UpdateCollisionMap();
         }
 
         public void UpdatePosition(Vector2 newPosition)
         {
             this.position = newPosition;
-            if((this.Parent as Chunk) != null)
+            if ((this.Parent as Chunk) != null)
             {
                 (this.Parent as Chunk).AddMovementQuery(this, newPosition);
-            }          
+            }
             if (this == Camera.Instance.ObjectFocused)
                 Camera.Instance.NotifyCameraPositionChange(this, newPosition);
         }
@@ -115,9 +124,24 @@ namespace AsciiEngine
             (Parent as Chunk).AddDeletionQuery(this);
         }
 
-        public void OnCollisionEvent(CollisionEventSignal collisionEvent)
+        public void AddObjectSignalQuery(ObjectSignal objectSignal)
         {
+            ObjectSignalQueries.Add(objectSignal);
+        }
 
+        private void ProcessObjectSignalQueries()
+        {
+            foreach (ObjectSignal signal in ObjectSignalQueries)
+            {
+                foreach (INodes child in Children)
+                {
+                    if ((signal as ObjectPhysicsSignal) != null)
+                    {
+                        PhysicsBody.AddObjectPhysicsQuery(signal as ObjectPhysicsSignal);
+                    }
+                }
+            }
+            ObjectSignalQueries = new List<ObjectSignal>();
         }
     }
 }
